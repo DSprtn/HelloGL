@@ -26,3 +26,4 @@ target_include_directories(HelloGL PUBLIC ${LIB_DIR})
 
 target_link_libraries(HelloGL "opengl32.lib")
 target_link_libraries(HelloGL ${GLFW_LIB_PATH})
+

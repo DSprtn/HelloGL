@@ -8,26 +8,22 @@
 
 const char* vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
+"layout (location = 1) in vec3 vecColor;\n"
+"out vec3 vertexColor;"
 "void main()\n"
 "{\n"
 "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"		vertexColor = vecColor;\n"
 "}\0";
 
 const char* fragmentShaderSource = "#version 330 core \n"
 "out vec4 FragColor; \n"
+"in vec3 vertexColor;"
+"uniform vec4 globalCol;"
 "void main()\n"
 "{\n"
-"FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
+"FragColor = vec4(vertexColor,1.0f);\n"
 "}\0";
-
-
-const char* yellowFragmentShaderSource = "#version 330 core \n"
-"out vec4 FragColor; \n"
-"void main()\n"
-"{\n"
-"FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
-"}\0";
-
 
 void checkShaderLinkingCorrect(unsigned int  shaderProgram)
 {
@@ -106,25 +102,8 @@ int main(int argc, char* argv[])
 
 	CheckShaderCompilationSuccesful(fragmentShader);
 
-
-	unsigned int yellowFragment;
-	yellowFragment = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(yellowFragment, 1, &yellowFragmentShaderSource, NULL);
-	glCompileShader(yellowFragment);
-
-	CheckShaderCompilationSuccesful(yellowFragment);
-
-
 	unsigned int shaderProgram;
 	shaderProgram = glCreateProgram();
-
-	unsigned int yellowShaderProgram;
-	yellowShaderProgram = glCreateProgram();
-
-	glAttachShader(yellowShaderProgram, vertexShader);
-	glAttachShader(yellowShaderProgram, yellowFragment);
-	glLinkProgram(yellowShaderProgram);
-
 
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
@@ -134,7 +113,6 @@ int main(int argc, char* argv[])
 
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
-	glDeleteShader(yellowFragment);
 
 #pragma endregion 
 
@@ -142,29 +120,17 @@ int main(int argc, char* argv[])
 #pragma region create/bind meshes
 
 
-	float vertices[] =
-	{
-		-0.5f,0.5f,0.0f,
-		0.5f,0.5f,0.0f,
-		0.5f,-0.5f,0.0f,
-		-0.5f,-0.5f,0.0f
+	float tri[] = {
+		// positions         // colors
+		 0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
+		-0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
+		 0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
 	};
 
 
-	float bothTris[] = {
-	-0.8f, -0.7f, 0.0f,
-	-0.5f, -0.2f, 0.0f,
-	-0.2f,  -0.7f, 0.0f,
-	0.8f, 0.7f, 0.0f,
-	0.5f, 0.2f, 0.0f,
-	0.2f,  0.7f, 0.0f
-	};
-
-
-	unsigned int bothTriIndices[] =
+	unsigned int triIndices[] =
 	{
-		0,1,2,
-		3,4,5
+		0,1,2
 	};
 
 	unsigned int VAO;
@@ -175,15 +141,17 @@ int main(int argc, char* argv[])
 	glGenBuffers(1, &VBO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(bothTris), bothTris, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(tri), tri, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3*sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	unsigned int EBO;
 	glGenBuffers(1, &EBO);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(bothTriIndices), bothTriIndices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(triIndices), triIndices, GL_STATIC_DRAW);
 
 #pragma endregion
 
@@ -197,19 +165,15 @@ int main(int argc, char* argv[])
 
 
 		glUseProgram(shaderProgram);
+		glUniform4f(glGetUniformLocation(shaderProgram, "globalCol"), (1 + sin(totalElapsed)) / 2, 0.0f, 0.0f, 1.0f);
 		processInput(window);
 		std::cout << totalElapsed << std::endl;
-		glClearColor(sin(totalElapsed), sin(0), sin(0), 1.0f);
+		glClearColor(0.0, 0.0, 0.2, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-
-		glUseProgram(yellowShaderProgram);
-
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*) (3 *sizeof(unsigned int)));
-
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);

@@ -3,11 +3,11 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-
-
 target_sources(HelloGL 
 	PRIVATE
 	${CMAKE_CURRENT_LIST_DIR}/glad.c
 	)
+	
+target_sources(HelloGL PRIVATE "src/Shaders/Shader.h")
 
 # TODO: Add tests and install targets if needed.

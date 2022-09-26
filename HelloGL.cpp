@@ -4,6 +4,7 @@
 #include <chrono>
 #include <math.h>
 #include "HelloGL.h"
+#include "src/Shaders/Shader.h"
 
 
 const char* vertexShaderSource = "#version 330 core\n"
@@ -83,39 +84,7 @@ int main(int argc, char* argv[])
 
 	float totalElapsed = 0.0f;
 
-
-#pragma region createShaders
-
-	unsigned int vertexShader;
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-
-	glCompileShader(vertexShader);
-
-	CheckShaderCompilationSuccesful(vertexShader);
-
-	unsigned int fragmentShader;
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShader);
-
-	CheckShaderCompilationSuccesful(fragmentShader);
-
-	unsigned int shaderProgram;
-	shaderProgram = glCreateProgram();
-
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-
-	checkShaderLinkingCorrect(shaderProgram);
-
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-
-#pragma endregion 
-
+	auto defaultProgram = Shader("Shaders/Technicolor.vert", "Shaders/Technicolor.frag");
 
 #pragma region create/bind meshes
 
@@ -164,8 +133,8 @@ int main(int argc, char* argv[])
 		last = now;
 
 
-		glUseProgram(shaderProgram);
-		glUniform4f(glGetUniformLocation(shaderProgram, "globalCol"), (1 + sin(totalElapsed)) / 2, 0.0f, 0.0f, 1.0f);
+		glUseProgram(defaultProgram);
+		glUniform4f(glGetUniformLocation(defaultProgram, "globalCol"), (1 + sin(totalElapsed)) / 2, 0.0f, 0.0f, 1.0f);
 		processInput(window);
 		std::cout << totalElapsed << std::endl;
 		glClearColor(0.0, 0.0, 0.2, 1.0f);

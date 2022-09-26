@@ -1,5 +1,5 @@
 ﻿cmake_minimum_required (VERSION 3.8)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 project ("OpenGL")
@@ -15,6 +15,7 @@ cmake_path(GET KHR_PATH PARENT_PATH LIB_DIR)
 add_executable (HelloGL "HelloGL.cpp" "HelloGL.h")
 
 add_subdirectory(src)
+add_subdirectory(Shaders)
 
 include_directories( ${OPENGL_INCLUDE_DIRS} ${GLFW3_INCLUDE_DIRS})
 
@@ -26,4 +27,5 @@ target_include_directories(HelloGL PUBLIC ${LIB_DIR})
 
 target_link_libraries(HelloGL "opengl32.lib")
 target_link_libraries(HelloGL ${GLFW_LIB_PATH})
+
 

@@ -6,11 +6,15 @@
 #include "HelloGL.h"
 #include "src/Shaders/Shader.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 
-float uniformAlpha = .2;
+float uniformAlpha = .2f;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -63,7 +67,7 @@ int main(int argc, char* argv[])
 	auto now = std::chrono::high_resolution_clock::now();
 	auto last = std::chrono::high_resolution_clock::now();
 
-	float totalElapsed = 0.0f;
+	double totalElapsed = 0.0;
 
 	auto defaultProgram = Shader("Shaders/Technicolor.vert", "Shaders/Technicolor.frag");
 
@@ -98,11 +102,14 @@ int main(int argc, char* argv[])
 		0,2,3
 	};
 
+#pragma endregion
+
+#pragma region Load textures
+
 	stbi_set_flip_vertically_on_load(true);
 
 	float borderColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
@@ -140,6 +147,8 @@ int main(int argc, char* argv[])
 	glUniform1i(glGetUniformLocation(defaultProgram, "ourTexture"), 0);
 	glUniform1i(glGetUniformLocation(defaultProgram, "ourTexture2"), 1);
 
+#pragma endregion
+
 	unsigned int VAO;
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
@@ -165,21 +174,29 @@ int main(int argc, char* argv[])
 #pragma endregion
 
 
+	glm::mat4 transform(1.0f);
+
+	transform = glm::rotate(transform, glm::radians(45.0f), glm::vec3(0.0f,0.0f,1.0f));
+
 	glfwSetKeyCallback(window, kbCallback);
 	while (!glfwWindowShouldClose(window))
 	{
 		now = std::chrono::high_resolution_clock::now();
 		const auto elapsed = std::chrono::high_resolution_clock::now() - last;
-		const unsigned long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-		totalElapsed += ((double)microseconds / 1000000.0);
+		const long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+		double currentElapsed = ((double)microseconds / 1000000.0);
+		totalElapsed += currentElapsed;
 		last = now;
 
 
 		glUseProgram(defaultProgram);
-		glUniform4f(glGetUniformLocation(defaultProgram, "globalCol"), (1 + sin(totalElapsed)) / 2, 0.0f, 0.0f, uniformAlpha);
-		
+		glUniform4f(glGetUniformLocation(defaultProgram, "globalCol"), (1 + static_cast<float>(sin(totalElapsed))) / 2.0f, 0.0f, 0.0f, uniformAlpha);
+
+		transform = glm::rotate(transform, glm::radians((float)currentElapsed * 5), glm::vec3(0, 0, 1));
+		glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "transform"), 1, GL_FALSE, glm::value_ptr(transform));
+
 		std::cout << totalElapsed << std::endl;
-		glClearColor(0.0, 0.0, 0.2, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);

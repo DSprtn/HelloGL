@@ -5,6 +5,7 @@ in vec3 vertexColor;
 in vec2 textureCoord;
 
 uniform vec4 globalCol;
+
 uniform sampler2D ourTexture;
 uniform sampler2D ourTexture2;
 

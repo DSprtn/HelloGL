@@ -19,12 +19,6 @@ public:
 
 	Shader(const std::string& vertSourcePath, const std::string& fragSourcePath)
 	{
-		std::ifstream t(vertSourcePath);
-		std::stringstream buffer;
-		buffer << t.rdbuf();
-
-		buffer.str().c_str();
-
 		unsigned int vert = glCreateShader(GL_VERTEX_SHADER);
 		unsigned int frag = glCreateShader(GL_FRAGMENT_SHADER);
 

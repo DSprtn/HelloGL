@@ -13,7 +13,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-
+glm::mat4 camera = glm::mat4(1.0f);
 float uniformAlpha = .2f;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -30,6 +30,13 @@ void kbCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 			break;
 		case GLFW_KEY_DOWN:
 			uniformAlpha = std::clamp(uniformAlpha -= 0.1f, 0.0f, 1.0f);
+			break;
+		case GLFW_KEY_W:
+			camera = glm::translate(camera, glm::vec3(0.0f, 0.0f, 0.1f));
+			break;
+		case GLFW_KEY_S:
+			camera = glm::translate(camera, glm::vec3(0.0f, 0.0f, -0.1f));
+			break;
 	}
 }
 
@@ -79,6 +86,63 @@ int main(int argc, char* argv[])
 		 0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
 		-0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
 		 0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
+	};
+
+	float cube[] = {
+			 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
+			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 0.0f,
+			 0.5f,  0.5f, -0.5f, 0.0f, 0.0f,0.0f,  1.0f, 1.0f,
+			 0.5f,  0.5f, -0.5f, 0.0f, 0.0f,0.0f,  1.0f, 1.0f,
+			-0.5f,  0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
+			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 0.0f,
+
+			-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,0.0f,  0.0f, 0.0f,
+			 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
+			 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 1.0f,
+			 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 1.0f,
+			-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
+			-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,0.0f,  0.0f, 0.0f,
+
+			-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
+			-0.5f,  0.5f, -0.5f, 0.0f, 0.0f,0.0f,  1.0f, 1.0f,
+			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
+			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
+			-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,0.0f,  0.0f, 0.0f,
+			-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
+
+			 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
+			 0.5f,  0.5f, -0.5f, 0.0f, 0.0f,0.0f,  1.0f, 1.0f,
+			 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
+			 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
+			 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,0.0f,  0.0f, 0.0f,
+			 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
+
+			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
+			 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  1.0f, 1.0f,
+			 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
+			 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
+			-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,0.0f,  0.0f, 0.0f,
+			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
+													 
+			-0.5f,  0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
+			 0.5f,  0.5f, -0.5f, 0.0f, 0.0f,0.0f,  1.0f, 1.0f,
+			 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
+			 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
+			-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  0.0f, 0.0f,
+			-0.5f,  0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f
+	};
+
+	glm::vec3 cubePositions[] = {
+		glm::vec3(0.0f,  0.0f,  0.0f),
+		glm::vec3(2.0f,  5.0f, -15.0f),
+		glm::vec3(-1.5f, -2.2f, -2.5f),
+		glm::vec3(-3.8f, -2.0f, -12.3f),
+		glm::vec3(2.4f, -0.4f, -3.5f),
+		glm::vec3(-1.7f,  3.0f, -7.5f),
+		glm::vec3(1.3f, -2.0f, -2.5f),
+		glm::vec3(1.5f,  2.0f, -2.5f),
+		glm::vec3(1.5f,  0.2f, -1.5f),
+		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
 
 
@@ -157,7 +221,7 @@ int main(int argc, char* argv[])
 	glGenBuffers(1, &VBO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
@@ -178,9 +242,15 @@ int main(int argc, char* argv[])
 
 	transform = glm::rotate(transform, glm::radians(45.0f), glm::vec3(0.0f,0.0f,1.0f));
 
-	glm::mat4 transform2(1.0f);
+	camera = glm::translate(camera, glm::vec3(0.0f, 0.0f, -3.0f));
 
+	glm::mat4 projection = glm::perspective(glm::radians(70.0), 16.0 / 9.0, 0.1, 100.0);
+
+	
 	glfwSetKeyCallback(window, kbCallback);
+
+	glEnable(GL_DEPTH_TEST);
+
 	while (!glfwWindowShouldClose(window))
 	{
 		now = std::chrono::high_resolution_clock::now();
@@ -190,30 +260,34 @@ int main(int argc, char* argv[])
 		totalElapsed += currentElapsed;
 		last = now;
 
-
 		glUseProgram(defaultProgram);
 		glUniform4f(glGetUniformLocation(defaultProgram, "globalCol"), (1 + static_cast<float>(sin(totalElapsed))) / 2.0f, 0.0f, 0.0f, uniformAlpha);
 
-		transform = glm::rotate(transform, glm::radians((float)currentElapsed * 5), glm::vec3(0, 0, 1));
-		glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "transform"), 1, GL_FALSE, glm::value_ptr(transform));
-
+		glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "Projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "View"), 1, GL_FALSE, glm::value_ptr(camera));
+		
 		std::cout << totalElapsed << std::endl;
 		glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-		
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-		transform2 = glm::mat4(1.0f);
-		transform2 = glm::translate(transform2, glm::vec3(-.5, .5, 0));
-		transform2 = glm::scale(transform2, glm::vec3(abs(sin(totalElapsed)) + .1f));
 
-		glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "transform"), 1, GL_FALSE, glm::value_ptr(transform2));
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		for (int i = 0; i < 10; i++)
+		{
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, cubePositions[i]);
+			model = glm::rotate(model, (float)totalElapsed * glm::radians(5.0f * i + 5.5f), glm::vec3(1.0f, .3f, 0.5f));
+
+			glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "Model"), 1, GL_FALSE, glm::value_ptr(model));
+			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+			glBindVertexArray(VAO);
+			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
 	glfwTerminate();

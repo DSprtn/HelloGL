@@ -178,6 +178,8 @@ int main(int argc, char* argv[])
 
 	transform = glm::rotate(transform, glm::radians(45.0f), glm::vec3(0.0f,0.0f,1.0f));
 
+	glm::mat4 transform2(1.0f);
+
 	glfwSetKeyCallback(window, kbCallback);
 	while (!glfwWindowShouldClose(window))
 	{
@@ -201,6 +203,13 @@ int main(int argc, char* argv[])
 		
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 		glBindVertexArray(VAO);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		transform2 = glm::mat4(1.0f);
+		transform2 = glm::translate(transform2, glm::vec3(-.5, .5, 0));
+		transform2 = glm::scale(transform2, glm::vec3(abs(sin(totalElapsed)) + .1f));
+
+		glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "transform"), 1, GL_FALSE, glm::value_ptr(transform2));
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		glfwPollEvents();

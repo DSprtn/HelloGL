@@ -271,6 +271,12 @@ int main(int argc, char* argv[])
 		glClear(GL_COLOR_BUFFER_BIT);
 
 
+		const float radius = 10.0f;
+		float camX = sin(totalElapsed) * radius;
+		float camZ = cos(totalElapsed) * radius;
+
+		camera = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0f), glm::vec3(0, 1, 0));
+
 		for (int i = 0; i < 10; i++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);

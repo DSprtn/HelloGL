@@ -12,9 +12,12 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include "src/Camera.h"
 
-glm::mat4 camera = glm::mat4(1.0f);
+
 float uniformAlpha = .2f;
+
+double deltaTime = 0;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -22,23 +25,23 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 
 void kbCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-	switch (key) 
+
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_KEY_DOWN)
 	{
-		case GLFW_KEY_ESCAPE: glfwSetWindowShouldClose(window, true); break;
-		case GLFW_KEY_UP:
-			uniformAlpha = std::clamp(uniformAlpha += 0.1f, 0.0f, 1.0f);
-			break;
-		case GLFW_KEY_DOWN:
-			uniformAlpha = std::clamp(uniformAlpha -= 0.1f, 0.0f, 1.0f);
-			break;
-		case GLFW_KEY_W:
-			camera = glm::translate(camera, glm::vec3(0.0f, 0.0f, 0.1f));
-			break;
-		case GLFW_KEY_S:
-			camera = glm::translate(camera, glm::vec3(0.0f, 0.0f, -0.1f));
-			break;
+		glfwSetWindowShouldClose(window, true);
 	}
+	if (key == GLFW_KEY_UP && action == GLFW_PRESS)
+	{
+		uniformAlpha = std::clamp(uniformAlpha += 0.1f, 0.0f, 1.0f);
+	}
+	if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+	{
+		uniformAlpha = std::clamp(uniformAlpha -= 0.1f, 0.0f, 1.0f);
+	}
+
 }
+
+
 
 int main(int argc, char* argv[])
 {
@@ -237,45 +240,29 @@ int main(int argc, char* argv[])
 
 #pragma endregion
 
-
-	glm::mat4 transform(1.0f);
-
-	transform = glm::rotate(transform, glm::radians(45.0f), glm::vec3(0.0f,0.0f,1.0f));
-
-	camera = glm::translate(camera, glm::vec3(0.0f, 0.0f, -3.0f));
-
-	glm::mat4 projection = glm::perspective(glm::radians(70.0), 16.0 / 9.0, 0.1, 100.0);
-
-	
 	glfwSetKeyCallback(window, kbCallback);
-
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glEnable(GL_DEPTH_TEST);
+
+	Camera cam;
 
 	while (!glfwWindowShouldClose(window))
 	{
-		now = std::chrono::high_resolution_clock::now();
-		const auto elapsed = std::chrono::high_resolution_clock::now() - last;
-		const long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-		double currentElapsed = ((double)microseconds / 1000000.0);
-		totalElapsed += currentElapsed;
-		last = now;
+		computeDelta(now, last, totalElapsed);
+
+		cam.Update(window, deltaTime);
+		//cam.LookAt(glm::vec3(0.0f));
 
 		glUseProgram(defaultProgram);
 		glUniform4f(glGetUniformLocation(defaultProgram, "globalCol"), (1 + static_cast<float>(sin(totalElapsed))) / 2.0f, 0.0f, 0.0f, uniformAlpha);
 
-		glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "Projection"), 1, GL_FALSE, glm::value_ptr(projection));
-		glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "View"), 1, GL_FALSE, glm::value_ptr(camera));
+		glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "Projection"), 1, GL_FALSE, glm::value_ptr(cam.ProjectionMatrix()));
+		glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "View"), 1, GL_FALSE, glm::value_ptr(cam.Matrix()));
 		
 		std::cout << totalElapsed << std::endl;
 		glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
 
 
-		const float radius = 10.0f;
-		float camX = sin(totalElapsed) * radius;
-		float camZ = cos(totalElapsed) * radius;
-
-		camera = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0f), glm::vec3(0, 1, 0));
 
 		for (int i = 0; i < 10; i++)
 		{
@@ -299,6 +286,19 @@ int main(int argc, char* argv[])
 	glfwTerminate();
 
 	return 0;
+}
+
+
+void computeDelta(std::chrono::steady_clock::time_point& now, std::chrono::steady_clock::time_point& last, double& totalElapsed)
+{
+	now = std::chrono::high_resolution_clock::now();
+	const auto elapsed = std::chrono::high_resolution_clock::now() - last;
+	const long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+	double currentElapsed = ((double)microseconds / 1000000.0);
+	totalElapsed += currentElapsed;
+	last = now;
+
+	deltaTime = currentElapsed;
 }
 
 

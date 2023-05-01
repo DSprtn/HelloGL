@@ -15,9 +15,18 @@
 #include "src/Camera.h"
 
 
-float uniformAlpha = .2f;
+namespace
+{
+	float uniformAlpha = .2f;
+	double deltaTime = 0;
+	float FOV = 75;
+}
 
-double deltaTime = 0;
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	FOV += yoffset * 10.0f;
+	FOV = glm::clamp(FOV, 0.01f, 179.9f);
+}
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -26,7 +35,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void kbCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_KEY_DOWN)
+	if (key == GLFW_KEY_ESCAPE)
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
@@ -46,13 +55,16 @@ void kbCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 int main(int argc, char* argv[])
 {
 
+	int resX = 1366;
+	int resY = 768;
+
 #pragma region init and init window
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(resX, resY, "LearnOpenGL", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -68,18 +80,59 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	glViewport(0, 0, 800, 600);
+	glViewport(0, 0, resX, resY);
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 #pragma endregion
 
-	auto now = std::chrono::high_resolution_clock::now();
-	auto last = std::chrono::high_resolution_clock::now();
-
-	double totalElapsed = 0.0;
 
 	auto defaultProgram = Shader("Shaders/Technicolor.vert", "Shaders/Technicolor.frag");
+
+#pragma region Load textures
+
+	stbi_set_flip_vertically_on_load(true);
+
+	float borderColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	int width, height, channels;
+	auto* data = stbi_load("img/container.jpg", &width, &height, &channels, 0);
+
+	unsigned int texture1;
+	glGenTextures(1, &texture1);
+	glBindTexture(GL_TEXTURE_2D, texture1);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+
+	auto* data2 = stbi_load("img/awesomeface.png", &width, &height, &channels, 0);
+
+	unsigned int texture2;
+	glGenTextures(1, &texture2);
+	glBindTexture(GL_TEXTURE_2D, texture2);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data2);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	stbi_image_free(data);
+	stbi_image_free(data2);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texture2);
+
+	glUseProgram(defaultProgram);
+	glUniform1i(glGetUniformLocation(defaultProgram, "ourTexture"), 0);
+	glUniform1i(glGetUniformLocation(defaultProgram, "ourTexture2"), 1);
+
+#pragma endregion
 
 #pragma region create/bind meshes
 
@@ -169,52 +222,7 @@ int main(int argc, char* argv[])
 		0,2,3
 	};
 
-#pragma endregion
 
-#pragma region Load textures
-
-	stbi_set_flip_vertically_on_load(true);
-
-	float borderColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	int width, height, channels;
-	auto* data = stbi_load("img/container.jpg", &width, &height, &channels, 0);
-
-	unsigned int texture1;
-	glGenTextures(1, &texture1);
-	glBindTexture(GL_TEXTURE_2D, texture1);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-
-	auto* data2 = stbi_load("img/awesomeface.png", &width, &height, &channels, 0);
-
-	unsigned int texture2;
-	glGenTextures(1, &texture2);
-	glBindTexture(GL_TEXTURE_2D, texture2);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data2);
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	stbi_image_free(data);
-	stbi_image_free(data2);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture1);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, texture2);
-
-	glUseProgram(defaultProgram);
-	glUniform1i(glGetUniformLocation(defaultProgram, "ourTexture"), 0);
-	glUniform1i(glGetUniformLocation(defaultProgram, "ourTexture2"), 1);
-
-#pragma endregion
 
 	unsigned int VAO;
 	glGenVertexArrays(1, &VAO);
@@ -240,18 +248,27 @@ int main(int argc, char* argv[])
 
 #pragma endregion
 
+
+
+	auto now = std::chrono::high_resolution_clock::now();
+	auto last = std::chrono::high_resolution_clock::now();
+	double totalElapsed = 0.0;
+
 	glfwSetKeyCallback(window, kbCallback);
+	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	
 	glEnable(GL_DEPTH_TEST);
 
-	Camera cam;
+
+	Camera cam(window);
 
 	while (!glfwWindowShouldClose(window))
 	{
 		computeDelta(now, last, totalElapsed);
 
-		cam.Update(window, deltaTime);
-		//cam.LookAt(glm::vec3(0.0f));
+		cam.Update(deltaTime);
+		cam.SetProjection(FOV, 16.0 / 9.0, 0.1, 1000);
 
 		glUseProgram(defaultProgram);
 		glUniform4f(glGetUniformLocation(defaultProgram, "globalCol"), (1 + static_cast<float>(sin(totalElapsed))) / 2.0f, 0.0f, 0.0f, uniformAlpha);

@@ -4,15 +4,18 @@
 namespace {
 	double lastCursorX = 0;
 	double lastCursorY = 0;
+	double lastMouseScrollY = 0;
 	bool firstCursorPosReceived = false;
 }
 
-Camera::Camera()
+
+Camera::Camera(GLFWwindow* window)
 {
 	m_matrix = glm::mat4(1.0f);
 	m_matrix = glm::translate(m_matrix, glm::vec3(0.0f, 0.0f, -3.0f));
 	position = glm::vec3(0, 0, -3.0f);
 	rotation = glm::quat(glm::highp_vec4(0, 0.0f, 0, 1));
+	this->window = window;
 	SetProjection(70, 16.0f / 9.0f, 0.1, 100.0);
 }
 
@@ -29,7 +32,7 @@ void Camera::SetProjection(float FOV, float aspect, float near, float far)
 	m_projectionMatrix = glm::perspective(glm::radians(FOV), aspect, near, far);
 }
 
-void Camera::Update(GLFWwindow* window, double deltaTime)
+void Camera::Update(double deltaTime)
 {
 	bool fastMode = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
 
@@ -51,6 +54,8 @@ void Camera::Update(GLFWwindow* window, double deltaTime)
 	{
 		position += glm::vec3(-moveSpeed * deltaTime, 0.0f, 0.0f) * glm::quat(m_matrix);
 	}
+
+
 	
 
 	double cursorPosX, cursorPosY;

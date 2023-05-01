@@ -8,13 +8,13 @@ class Camera
 {
 public:
 
-	Camera();
+	Camera(GLFWwindow* window);
 
 	void LookAt(glm::vec3 position);
 
 	void SetProjection(float FOV, float aspect, float near, float far);
 
-	void Update(GLFWwindow* window, double delta);
+	void Update(double delta);
 
 	glm::mat4 ProjectionMatrix()
 	{
@@ -31,5 +31,6 @@ private:
 	glm::mat4 m_matrix;
 	glm::vec3 position;
 	glm::quat rotation;
+	GLFWwindow* window;
 
 };

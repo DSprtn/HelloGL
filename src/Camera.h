@@ -31,6 +31,8 @@ private:
 	glm::mat4 m_matrix;
 	glm::vec3 position;
 	glm::quat rotation;
+	float pitch = 0;
+	float yaw = 0;
 	GLFWwindow* window;
 
 };

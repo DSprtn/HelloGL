@@ -23,8 +23,6 @@ void Camera::LookAt(glm::vec3 targetPosition)
 {
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	m_matrix = glm::lookAt(position, glm::vec3(0,0,-1) * glm::quat(m_matrix) + targetPosition, cameraUp);
-
-
 }
 
 void Camera::SetProjection(float FOV, float aspect, float near, float far)
@@ -55,9 +53,6 @@ void Camera::Update(double deltaTime)
 		position += glm::vec3(-moveSpeed * deltaTime, 0.0f, 0.0f) * glm::quat(m_matrix);
 	}
 
-
-	
-
 	double cursorPosX, cursorPosY;
 	glfwGetCursorPos(window, &cursorPosX, &cursorPosY);
 
@@ -75,10 +70,10 @@ void Camera::Update(double deltaTime)
 	}
 
 	m_matrix = glm::mat4(1.0f);
-	rotation = glm::quat(glm::highp_vec4(yDelta * deltaTime, xDelta * deltaTime, 0, 1)) * rotation;
+	pitch += yDelta * deltaTime;
+	yaw += xDelta * deltaTime;
 	m_matrix[3] = glm::highp_vec4(position.x, position.y, position.z, 1);
+	rotation = glm::angleAxis(pitch, glm::vec3(1, 0, 0));
+	rotation *= glm::angleAxis(yaw, glm::vec3(0, 1, 0));
 	m_matrix = glm::mat4_cast(rotation) * m_matrix;
-
-
-	
 }

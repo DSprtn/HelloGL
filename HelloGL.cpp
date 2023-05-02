@@ -88,6 +88,7 @@ int main(int argc, char* argv[])
 
 
 	auto defaultProgram = Shader("Shaders/Technicolor.vert", "Shaders/Technicolor.frag");
+	auto lightProgram = Shader("Shaders/Light.vert", "Shaders/Light.frag");
 
 #pragma region Load textures
 
@@ -137,56 +138,52 @@ int main(int argc, char* argv[])
 #pragma region create/bind meshes
 
 
-	float tri[] = {
-		// positions         // colors
-		 0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-		-0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
-		 0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
-	};
-
 	float cube[] = {
-			 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
-			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 0.0f,
-			 0.5f,  0.5f, -0.5f, 0.0f, 0.0f,0.0f,  1.0f, 1.0f,
-			 0.5f,  0.5f, -0.5f, 0.0f, 0.0f,0.0f,  1.0f, 1.0f,
-			-0.5f,  0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
-			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
 
-			-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,0.0f,  0.0f, 0.0f,
-			 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
-			 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 1.0f,
-			 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 1.0f,
-			-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
-			-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,0.0f,  0.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
 
-			-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
-			-0.5f,  0.5f, -0.5f, 0.0f, 0.0f,0.0f,  1.0f, 1.0f,
-			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
-			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
-			-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,0.0f,  0.0f, 0.0f,
-			-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-			 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
-			 0.5f,  0.5f, -0.5f, 0.0f, 0.0f,0.0f,  1.0f, 1.0f,
-			 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
-			 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
-			 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,0.0f,  0.0f, 0.0f,
-			 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
-			 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  1.0f, 1.0f,
-			 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
-			 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
-			-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,0.0f,  0.0f, 0.0f,
-			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
-													 
-			-0.5f,  0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f,
-			 0.5f,  0.5f, -0.5f, 0.0f, 0.0f,0.0f,  1.0f, 1.0f,
-			 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
-			 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  1.0f, 0.0f,
-			-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,0.0f,  0.0f, 0.0f,
-			-0.5f,  0.5f, -0.5f, 0.0f, 0.0f,0.0f,  0.0f, 1.0f
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
+
+
 	};
+
 
 	glm::vec3 cubePositions[] = {
 		glm::vec3(0.0f,  0.0f,  0.0f),
@@ -200,28 +197,6 @@ int main(int argc, char* argv[])
 		glm::vec3(1.5f,  0.2f, -1.5f),
 		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
-
-
-	float quad[] = {
-		// positions          // colors           // texture coords
-		 0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-		 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-		-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
-	};
-
-
-	unsigned int triIndices[] =
-	{
-		0,1,2
-	};
-
-	unsigned int quadIndices[] =
-	{
-		0,1,2,
-		0,2,3
-	};
-
 
 
 	unsigned int VAO;
@@ -240,19 +215,21 @@ int main(int argc, char* argv[])
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
-	unsigned int EBO;
-	glGenBuffers(1, &EBO);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndices), quadIndices, GL_STATIC_DRAW);
+	// Light Cube
+	unsigned int lightVAO;
+	glGenVertexArrays(1, &lightVAO);
+	glBindVertexArray(lightVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
 
 #pragma endregion
 
-
-
-	auto now = std::chrono::high_resolution_clock::now();
-	auto last = std::chrono::high_resolution_clock::now();
-	double totalElapsed = 0.0;
+	auto lastMeasuredTime = std::chrono::high_resolution_clock::now();
+	double totalElapsedTime = 0.0;
 
 	glfwSetKeyCallback(window, kbCallback);
 	glfwSetScrollCallback(window, scroll_callback);
@@ -265,27 +242,44 @@ int main(int argc, char* argv[])
 
 	while (!glfwWindowShouldClose(window))
 	{
-		computeDelta(now, last, totalElapsed);
+		computeDelta(lastMeasuredTime, totalElapsedTime);
 
 		cam.Update(deltaTime);
 		cam.SetProjection(FOV, 16.0 / 9.0, 0.1, 1000);
 
+
+		glUseProgram(lightProgram);
+		glm::mat4 model = glm::mat4(1.0f);
+		glm::vec3 lightPos = glm::vec3(0, 2 * sinf(totalElapsedTime), -2);
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.1f));
+		glUniformMatrix4fv(glGetUniformLocation(lightProgram, "Projection"), 1, GL_FALSE, glm::value_ptr(cam.ProjectionMatrix()));
+		glUniformMatrix4fv(glGetUniformLocation(lightProgram, "View"), 1, GL_FALSE, glm::value_ptr(cam.Matrix()));
+		glUniformMatrix4fv(glGetUniformLocation(lightProgram, "Model"), 1, GL_FALSE, glm::value_ptr(model));
+
+		glm::vec3 lightColor = glm::vec3(1.0f,0.0f,.0f);
+		glUniform3fv(glGetUniformLocation(lightProgram, "LightCol"), 1, glm::value_ptr(lightColor));
+		glBindVertexArray(lightVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
 		glUseProgram(defaultProgram);
-		glUniform4f(glGetUniformLocation(defaultProgram, "globalCol"), (1 + static_cast<float>(sin(totalElapsed))) / 2.0f, 0.0f, 0.0f, uniformAlpha);
+		
+		glUniform3fv(glGetUniformLocation(defaultProgram, "LightPos"), 1, glm::value_ptr(lightPos));
+		glUniform3fv(glGetUniformLocation(defaultProgram, "LightCol"), 1, glm::value_ptr(lightColor));
+
+		glUniform4f(glGetUniformLocation(defaultProgram, "globalCol"), (1 + static_cast<float>(sin(totalElapsedTime))) / 2.0f, 0.0f, 0.0f, uniformAlpha);
 
 		glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "Projection"), 1, GL_FALSE, glm::value_ptr(cam.ProjectionMatrix()));
 		glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "View"), 1, GL_FALSE, glm::value_ptr(cam.Matrix()));
-		
-		std::cout << totalElapsed << std::endl;
+
+		std::cout << totalElapsedTime << std::endl;
 		glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
-
-
 
 		for (int i = 0; i < 10; i++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, cubePositions[i]);
-			model = glm::rotate(model, (float)totalElapsed * glm::radians(5.0f * i + 5.5f), glm::vec3(1.0f, .3f, 0.5f));
+			model = glm::rotate(model, (float)totalElapsedTime * glm::radians(5.0f * i + 5.5f), glm::vec3(1.0f, .3f, 0.5f));
 
 			glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "Model"), 1, GL_FALSE, glm::value_ptr(model));
 			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -293,6 +287,8 @@ int main(int argc, char* argv[])
 			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
+
+
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);
@@ -306,9 +302,9 @@ int main(int argc, char* argv[])
 }
 
 
-void computeDelta(std::chrono::steady_clock::time_point& now, std::chrono::steady_clock::time_point& last, double& totalElapsed)
+void computeDelta(std::chrono::steady_clock::time_point& last, double& totalElapsed)
 {
-	now = std::chrono::high_resolution_clock::now();
+	auto now = std::chrono::high_resolution_clock::now();
 	const auto elapsed = std::chrono::high_resolution_clock::now() - last;
 	const long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
 	double currentElapsed = ((double)microseconds / 1000000.0);

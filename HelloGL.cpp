@@ -253,7 +253,7 @@ int main(int argc, char* argv[])
 
 		glUseProgram(lightProgram);
 		glm::mat4 model = glm::mat4(1.0f);
-		glm::vec3 lightPos = glm::vec3(4 * cosf(totalElapsedTime), 2 * sinf(totalElapsedTime), -2 + 2 *cosf(totalElapsedTime));
+		glm::vec3 lightPos = glm::vec3(4 * cosf(totalElapsedTime * .1), 2 * sinf(totalElapsedTime * .1), -2 + 2 *cosf(totalElapsedTime * .1));
 
 		model = glm::translate(model, lightPos);
 		model = glm::scale(model, glm::vec3(0.1f));

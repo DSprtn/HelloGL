@@ -59,7 +59,6 @@ void Camera::Update(double deltaTime)
 	double xDelta = cursorPosX - lastCursorX;
 	double yDelta = cursorPosY - lastCursorY;
 
-
 	lastCursorX = cursorPosX;
 	lastCursorY = cursorPosY;
 

@@ -5,6 +5,7 @@ in vec3 vertexColor;
 in vec2 textureCoord;
 in vec3 normal;
 in vec3 worldPos;
+in vec4 viewSpacePos;
 
 uniform vec4 globalCol;
 
@@ -20,10 +21,10 @@ void main()
 	vec4 tex2Color = texture(ourTexture2, textureCoord);
 	FragColor = mix(texColor, tex2Color, globalCol.a);
 
-	vec3 lightDir = normalize(LightPos - worldPos);
+	vec3 lightDir = normalize(LightPos - vec3(viewSpacePos));
 
-	vec3 lightInfluence = max(dot(lightDir, normal),0.0) * LightCol;
+	vec3 diffuse = clamp(dot(lightDir, normal) +.1, 0.0, 1.0) * LightCol;
 
-	FragColor = FragColor * vec4(lightInfluence,1);
-	//FragColor = vec4(normal,1);
+	FragColor = FragColor * vec4(diffuse,1);
+	//FragColor = vec4(lightDir,1);
 }

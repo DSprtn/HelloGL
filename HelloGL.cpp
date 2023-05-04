@@ -195,7 +195,10 @@ int main(int argc, char* argv[])
 		glm::vec3(1.3f, -2.0f, -2.5f),
 		glm::vec3(1.5f,  2.0f, -2.5f),
 		glm::vec3(1.5f,  0.2f, -1.5f),
-		glm::vec3(-1.3f,  1.0f, -1.5f)
+		glm::vec3(-1.3f,  1.0f, -1.5f),
+		glm::vec3(0,10,0),
+		glm::vec3(10,0,0),
+		glm::vec3(0,0,10)
 	};
 
 
@@ -250,12 +253,17 @@ int main(int argc, char* argv[])
 
 		glUseProgram(lightProgram);
 		glm::mat4 model = glm::mat4(1.0f);
-		glm::vec3 lightPos = glm::vec3(0, 2 * sinf(totalElapsedTime), -2);
+		glm::vec3 lightPos = glm::vec3(4 * cosf(totalElapsedTime), 2 * sinf(totalElapsedTime), -2 + 2 *cosf(totalElapsedTime));
 		model = glm::translate(model, lightPos);
 		model = glm::scale(model, glm::vec3(0.1f));
+
+
+		//glm::mat4 normal = glm::transpose(glm::inverse(model));
+		//glUniformMatrix4fv(glGetUniformLocation(lightProgram, "Normal"), 1, GL_FALSE, glm::value_ptr(normal));
 		glUniformMatrix4fv(glGetUniformLocation(lightProgram, "Projection"), 1, GL_FALSE, glm::value_ptr(cam.ProjectionMatrix()));
 		glUniformMatrix4fv(glGetUniformLocation(lightProgram, "View"), 1, GL_FALSE, glm::value_ptr(cam.Matrix()));
 		glUniformMatrix4fv(glGetUniformLocation(lightProgram, "Model"), 1, GL_FALSE, glm::value_ptr(model));
+
 
 		glm::vec3 lightColor = glm::vec3(1.0f,0.0f,.0f);
 		glUniform3fv(glGetUniformLocation(lightProgram, "LightCol"), 1, glm::value_ptr(lightColor));
@@ -264,7 +272,7 @@ int main(int argc, char* argv[])
 
 		glUseProgram(defaultProgram);
 		
-		glUniform3fv(glGetUniformLocation(defaultProgram, "LightPos"), 1, glm::value_ptr(lightPos));
+		glUniform3fv(glGetUniformLocation(defaultProgram, "LightPos"), 1, glm::value_ptr(cam.Matrix()* glm::vec4(lightPos,1)));
 		glUniform3fv(glGetUniformLocation(defaultProgram, "LightCol"), 1, glm::value_ptr(lightColor));
 
 		glUniform4f(glGetUniformLocation(defaultProgram, "globalCol"), (1 + static_cast<float>(sin(totalElapsedTime))) / 2.0f, 0.0f, 0.0f, uniformAlpha);
@@ -275,12 +283,15 @@ int main(int argc, char* argv[])
 		std::cout << totalElapsedTime << std::endl;
 		glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
 
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < 13; i++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, cubePositions[i]);
 			model = glm::rotate(model, (float)totalElapsedTime * glm::radians(5.0f * i + 5.5f), glm::vec3(1.0f, .3f, 0.5f));
 
+
+			glm::mat4 normal = glm::transpose(glm::inverse(model));
+			glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "Normal"), 1, GL_FALSE, glm::value_ptr(normal));
 			glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "Model"), 1, GL_FALSE, glm::value_ptr(model));
 			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 			glBindVertexArray(VAO);

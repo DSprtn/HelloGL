@@ -25,6 +25,17 @@ void main()
 
 	vec3 diffuse = clamp(dot(lightDir, normal) +.1, 0.0, 1.0) * LightCol;
 
-	FragColor = FragColor * vec4(diffuse,1);
+	vec3 viewDir = vec3(0,0,1);
+	vec3 reflectDir = reflect(-lightDir, normal);
+
+	float specularStrength = 1.0f;
+
+	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+	vec3 specular = specularStrength * spec * LightCol;  
+
+	vec3 ambient = LightCol * .1;
+
+	FragColor = FragColor * vec4(diffuse + specular + ambient,1);
 	//FragColor = vec4(lightDir,1);
+	//FragColor = vec4(specular,1);
 }

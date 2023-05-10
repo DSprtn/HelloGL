@@ -14,12 +14,50 @@
 #include "stb_image.h"
 #include "src/Camera.h"
 
-
 namespace
 {
 	float uniformAlpha = .2f;
 	double deltaTime = 0;
 	float FOV = 75;
+}
+
+// utility function for loading a 2D texture from file
+// ---------------------------------------------------
+unsigned int loadTexture(char const* path)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+
+	int width, height, nrComponents;
+	unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
+	if (data)
+	{
+		GLenum format;
+		if (nrComponents == 1)
+			format = GL_RED;
+		else if (nrComponents == 3)
+			format = GL_RGB;
+		else if (nrComponents == 4)
+			format = GL_RGBA;
+
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		stbi_image_free(data);
+	}
+	else
+	{
+		std::cout << "Texture failed to load at path: " << path << std::endl;
+		stbi_image_free(data);
+	}
+
+	return textureID;
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
@@ -92,47 +130,24 @@ int main(int argc, char* argv[])
 
 #pragma region Load textures
 
-	stbi_set_flip_vertically_on_load(true);
 
-	float borderColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	int width, height, channels;
-	auto* data = stbi_load("img/container.jpg", &width, &height, &channels, 0);
-
-	unsigned int texture1;
-	glGenTextures(1, &texture1);
-	glBindTexture(GL_TEXTURE_2D, texture1);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-
-	auto* data2 = stbi_load("img/awesomeface.png", &width, &height, &channels, 0);
-
-	unsigned int texture2;
-	glGenTextures(1, &texture2);
-	glBindTexture(GL_TEXTURE_2D, texture2);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data2);
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	stbi_image_free(data);
-	stbi_image_free(data2);
+	unsigned int diffuse = loadTexture("img/container2.png");
+	unsigned int specular = loadTexture("img/container2_specular.png");
+	unsigned int emissive = loadTexture("img/matrix.jpg");
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture1);
+	glBindTexture(GL_TEXTURE_2D, diffuse);
+
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, texture2);
+	glBindTexture(GL_TEXTURE_2D, specular);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, emissive);
 
 	glUseProgram(defaultProgram);
-	glUniform1i(glGetUniformLocation(defaultProgram, "ourTexture"), 0);
-	glUniform1i(glGetUniformLocation(defaultProgram, "ourTexture2"), 1);
-
+	glUniform1i(glGetUniformLocation(defaultProgram, "material.diffuse"), 0);
+	glUniform1i(glGetUniformLocation(defaultProgram, "material.specular"), 1);
+	glUniform1i(glGetUniformLocation(defaultProgram, "material.emissive"), 2);
 #pragma endregion
 
 #pragma region create/bind meshes
@@ -270,16 +285,17 @@ int main(int argc, char* argv[])
 
 		glUseProgram(defaultProgram);
 		
-		glUniform3fv(glGetUniformLocation(defaultProgram, "LightPos"), 1, glm::value_ptr(cam.Matrix()* glm::vec4(lightPos,1)));
-		glUniform3fv(glGetUniformLocation(defaultProgram, "LightCol"), 1, glm::value_ptr(lightColor));
+		glUniform3fv(glGetUniformLocation(defaultProgram, "light.position"), 1, glm::value_ptr(cam.Matrix()* glm::vec4(lightPos,1)));
+		glUniform3fv(glGetUniformLocation(defaultProgram, "light.color"), 1, glm::value_ptr(lightColor));
 
-		glUniform4f(glGetUniformLocation(defaultProgram, "globalCol"), (1 + static_cast<float>(sin(totalElapsedTime))) / 2.0f, 0.0f, 0.0f, uniformAlpha);
+		glUniform4f(glGetUniformLocation(defaultProgram, "globalCol"), (1 + static_cast<float>(sin(totalElapsedTime * 2))), 0.0f, 0.0f, uniformAlpha);
 
 		glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "Projection"), 1, GL_FALSE, glm::value_ptr(cam.ProjectionMatrix()));
 		glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "View"), 1, GL_FALSE, glm::value_ptr(cam.Matrix()));
+		
 
 		std::cout << totalElapsedTime << std::endl;
-		glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 		for (int i = 0; i < 13; i++)
 		{

@@ -9,13 +9,13 @@ in vec4 viewSpacePos;
 
 uniform vec4 globalCol;
 
-struct Light
+struct PointLight
 {
 	vec3 position;
 	vec3 color;
 };
 
-uniform Light light;
+uniform PointLight light;
 
 struct Material {
     sampler2D diffuse;
@@ -41,15 +41,18 @@ void main()
 
 	float specularStrength = 1.0f;
 
-	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64);
-	vec3 specular = texSpecular * spec * light.color;  
+	vec3 emissiveOut = emissive * globalCol.r;
+
+	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 256);
+	vec3 specular = (texSpecular + emissive) * spec * (light.color + emissive * 2 * step(0.1, texSpecular));  
 
 	vec3 ambient = light.color * .1 * texColor;
 
-	FragColor = vec4(emissive * globalCol.r + diffuse + specular + ambient,1);
+	FragColor = vec4(emissiveOut * .1 + diffuse + specular + ambient,1);
 	//FragColor = vec4(lightDir,1);
 	//FragColor = vec4(specular,1);
 	//FragColor = vec4(abs(viewDir),1);
 	//FragColor = vec4(texSpecular,1);
 	//FragColor = texture(material.specular, textureCoord);
+	FragColor = vec4(spec,spec,spec,1);
 }

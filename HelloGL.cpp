@@ -28,6 +28,7 @@ namespace
 }
 
 bool locked = true;
+bool shouldReloadShaders = false;
 
 // utility function for loading a 2D texture from file
 // ---------------------------------------------------
@@ -93,6 +94,14 @@ void kbCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}
 		locked = !locked;
+	}
+
+	if (key == GLFW_KEY_R && action == GLFW_PRESS)
+	{
+		if (locked)
+		{
+			shouldReloadShaders = true;
+		}
 	}
 
 	if (key == GLFW_KEY_UP && action == GLFW_PRESS)
@@ -162,9 +171,11 @@ int main(int argc, char* argv[])
 	glBindTexture(GL_TEXTURE_2D, emissive);
 
 	glUseProgram(defaultProgram);
-	glUniform1i(glGetUniformLocation(defaultProgram, "material.diffuse"), 0);
-	glUniform1i(glGetUniformLocation(defaultProgram, "material.specular"), 1);
-	glUniform1i(glGetUniformLocation(defaultProgram, "material.emissive"), 2);
+	defaultProgram.setUniform1i(0, "material.diffuse");
+	defaultProgram.setUniform1i(1, "material.specular");
+	defaultProgram.setUniform1i(2, "material.emissive");
+
+
 #pragma endregion
 
 #pragma region create/bind meshes
@@ -288,7 +299,12 @@ int main(int argc, char* argv[])
 	float pointLightColor[3]{ 1.0f, 0.7f, .7f };
 
 	float directionalLightColor[3]{ 0.1, 0.1, 0.5 };
-	float directionalLightDirection[3]{ 0.0f, -1.0f, 0.4f};
+	float directionalLightDirection[3]{ 0.0f, -1.0f, 0.4f };
+
+	float spotLightColor[3]{ 0.1, 0.1, 0.5 };
+	float spotLightRange = 5.0f;
+	float spotLightDirection[3]{ 0.0f, -1.0f, 0.5f };
+	float spotLightPosition[3]{ 0.0f, 3.0f, 0.0f };
 
 	
 	constexpr int fpsAvgCount = 30;
@@ -302,6 +318,19 @@ int main(int argc, char* argv[])
 
 	while (!glfwWindowShouldClose(window))
 	{
+		if (shouldReloadShaders)
+		{
+			defaultProgram.Reload();
+			lightProgram.Reload();
+			shouldReloadShaders = false;
+
+			glUseProgram(defaultProgram);
+			defaultProgram.setUniform1i(0, "material.diffuse");
+			defaultProgram.setUniform1i(1, "material.specular");
+			defaultProgram.setUniform1i(2, "material.emissive");
+		}
+
+
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -382,19 +411,8 @@ int main(int argc, char* argv[])
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
-		ImGui::Begin("Point light settings");
-		ImGui::SliderFloat("Radius", &lightRadius, 0.1f, 20.0f);
-		ImGui::ColorEdit3("Color", &pointLightColor[0]);
-		ImGui::End();
-
-
-		ImGui::Begin("Directional light settings");
-
-		ImGui::DragFloat3("Direction", &directionalLightDirection[0], 0.01f, -1.0f, 1.0f);
-		ImGui::ColorEdit3("Color", &directionalLightColor[0]);
-		ImGui::End();
-
-		ImGui::Begin("Simulation info");
+		ImGui::Begin("Scene settings");
+		ImGui::Text("Simulation info");
 		
 
 		deltaTimeAverage[deltaIndex] = deltaTime;
@@ -408,8 +426,30 @@ int main(int argc, char* argv[])
 
 
 		auto str = "FPS: " + std::to_string(1 / avg);
+
 		ImGui::Text(str.c_str());
 		ImGui::SliderFloat("Delta time", &moveDeltatimeMultiplier, 0.0f, 5.0f);
+
+		ImGui::BeginChild("Point light settings");
+		ImGui::SliderFloat("Radius", &lightRadius, 0.1f, 20.0f);
+		ImGui::ColorEdit3("Color", &pointLightColor[0]);
+
+
+		ImGui::Text("Directional light settings");
+
+		ImGui::DragFloat3("Direction", &directionalLightDirection[0], 0.01f, -1.0f, 1.0f);
+		ImGui::ColorEdit3("Color", &directionalLightColor[0]);
+
+
+
+		ImGui::Text("Spotlight settings");
+
+		ImGui::DragFloat3("Direction", &spotLightDirection[0], 0.01f, -1.0f, 1.0f);
+		ImGui::ColorEdit3("Color", &spotLightColor[0]);
+		ImGui::SliderFloat("Range", &spotLightRange, 0.1f, 20.0f);
+		ImGui::DragFloat3("Position", &spotLightPosition[0], 0.05f, -25.0f, 25.0f);
+		ImGui::EndChild();
+
 		ImGui::End();
 
 		ImGui::Render();

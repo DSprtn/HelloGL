@@ -42,6 +42,12 @@ struct Material {
   
 uniform Material material;
 
+
+float attenuate(float dist, float lightRadius)
+{
+	return pow(max(1 - pow((dist/lightRadius),4),0),2);
+}
+
 vec3 getPointLightContribution(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
 	vec3 texSpecular = vec3(texture(material.specular, textureCoord));
@@ -56,7 +62,7 @@ vec3 getPointLightContribution(PointLight light, vec3 normal, vec3 fragPos, vec3
 
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64);
 
-	vec3 specular = (texSpecular + emissive * .5 * step(0.1, texSpecular)) * spec * (light.color + emissive * 2 * step(0.1, texSpecular));   
+	vec3 specular = (texSpecular + emissive * 2 * step(0.1, texSpecular)) * spec * (light.color + emissive * 2 * step(0.1, texSpecular));   
 
 	vec3 ambient = light.color * .1;
 
@@ -64,7 +70,10 @@ vec3 getPointLightContribution(PointLight light, vec3 normal, vec3 fragPos, vec3
 	float d = length(light.position - vec3(viewSpacePos));
 
 	//float attenuation = 1.0 / (1 + .22f * d + .2 * d * d);
-	float attenuation = pow(min(1,light.radius / d), 2);
+
+	//float attenuation = pow(min(1,light.radius / d), 2);
+	//float attenuation = pow( light.radius/max(light.radius,d) ,2);
+	float attenuation = attenuate(d,light.radius);
 
 	return vec3(texture(material.diffuse, textureCoord)) * attenuation * (diffuse + ambient + specular);
 }

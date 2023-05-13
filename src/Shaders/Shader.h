@@ -23,60 +23,14 @@ public:
 
 	Shader(const std::string& vertSourcePath, const std::string& fragSourcePath)
 	{
-		unsigned int vert = glCreateShader(GL_VERTEX_SHADER);
-		unsigned int frag = glCreateShader(GL_FRAGMENT_SHADER);
-
-		CompileShader(vertSourcePath, vert);
-		CompileShader(fragSourcePath, frag);
-
-
-		programID = glCreateProgram();
-
-		glAttachShader(programID, vert);
-		glAttachShader(programID, frag);
-		glLinkProgram(programID);
-
-		int  success;
-		char infoLog[512];
-		glGetProgramiv(programID, GL_LINK_STATUS, &success);
-		if (!success) {
-			glGetProgramInfoLog(programID, 512, NULL, infoLog);
-		}
-
-		glDeleteShader(frag);
-		glDeleteShader(vert);
+		vertPath = vertSourcePath;
+		fragPath = fragSourcePath;
+		CompileProgram(vertSourcePath, fragSourcePath);
 	}
 
-	void CompileShader(const std::string& sourcePath, const unsigned int shader)
+	void Shader::Reload()
 	{
-		if (!std::filesystem::exists(sourcePath))
-		{
-			throw std::exception("FILE DOES NOT EXIST");
-		}
-		std::ifstream t(sourcePath);
-
-		t.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-	
-		std::stringstream buffer;
-		buffer << t.rdbuf();
-		std::string source = buffer.str();
-		const char* sourceChar = source.c_str();
-
-		glShaderSource(shader, 1, &sourceChar, NULL);
-
-		glCompileShader(shader);
-
-		int  success;
-		char infoLog[512];
-		glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-		if (!success)
-		{
-			glGetShaderInfoLog(shader, 512, NULL, infoLog);
-			auto info = "ERROR::SHADER::COMPILATION_FAILED\n" + std::string(infoLog);
-			std::cout << info;
-			throw std::exception(info.c_str());
-		}
+		CompileProgram(vertPath, fragPath);
 	}
 
 	void Shader::SetMat4(const glm::mat4& mat4, const std::string& prop)
@@ -99,6 +53,11 @@ public:
 		glUniform1f(glGetUniformLocation(programID, prop.c_str()), f);
 	}
 
+	void Shader::setUniform1i(int i, const std::string& prop)
+	{
+		glUniform1i(glGetUniformLocation(programID, prop.c_str()), i);
+	}
+
 	void Shader::use()
 	{
 		glUseProgram(programID);
@@ -109,7 +68,78 @@ public:
 
 private:
 
+	void CompileProgram(const std::string& vertSourcePath, const std::string& fragSourcePath)
+	{
+		auto newProgramID = glCreateProgram();
+
+		unsigned int vert = glCreateShader(GL_VERTEX_SHADER);
+		unsigned int frag = glCreateShader(GL_FRAGMENT_SHADER);
+
+		CompileShader(vertSourcePath, vert);
+		CompileShader(fragSourcePath, frag);
+
+		glAttachShader(newProgramID, vert);
+		glAttachShader(newProgramID, frag);
+		glLinkProgram(newProgramID);
+
+		int  success;
+		char infoLog[512];
+		glGetProgramiv(newProgramID, GL_LINK_STATUS, &success);
+		if (!success) {
+			glGetProgramInfoLog(newProgramID, 512, NULL, infoLog);
+		}
+
+		glDeleteShader(frag);
+		glDeleteShader(vert);
+
+		if (success)
+		{
+			if (compiled)
+			{
+				glDeleteProgram(this->programID);
+			}
+			this->programID = newProgramID;
+			compiled = true;
+		}
+		
+	}
+
+	void CompileShader(const std::string& sourcePath, const unsigned int shader)
+	{
+		if (!std::filesystem::exists(sourcePath))
+		{
+			throw std::exception("FILE DOES NOT EXIST");
+		}
+		std::ifstream t(sourcePath);
+
+		t.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+		std::stringstream buffer;
+		buffer << t.rdbuf();
+		std::string source = buffer.str();
+		const char* sourceChar = source.c_str();
+
+		glShaderSource(shader, 1, &sourceChar, NULL);
+
+		glCompileShader(shader);
+
+		int  success;
+		char infoLog[512];
+		glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+
+		if (!success)
+		{
+			glGetShaderInfoLog(shader, 512, NULL, infoLog);
+			auto info = "ERROR::SHADER::COMPILATION_FAILED\n" + std::string(infoLog);
+			std::cout << info;
+			throw std::exception(info.c_str());
+		}
+	}
+
 	unsigned int programID;
+	bool compiled = false;
+	std::string vertPath;
+	std::string fragPath;
 
 };
 

@@ -3,7 +3,7 @@
 
 #include <string>
 #include <glad.h>
-#include <glfw3.h>
+#include <GLFW/glfw3.h>
 
 #include <fstream>
 #include <sstream>
@@ -11,6 +11,10 @@
 #include <cassert>
 #include <filesystem>
 #include <exception>
+
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
 
 class Shader
 {
@@ -73,6 +77,31 @@ public:
 			std::cout << info;
 			throw std::exception(info.c_str());
 		}
+	}
+
+	void Shader::SetMat4(const glm::mat4& mat4, const std::string& prop)
+	{
+		glUniformMatrix4fv(glGetUniformLocation(programID, prop.c_str()), 1, GL_FALSE, glm::value_ptr(mat4));
+	}
+
+	void Shader::setVec3(glm::vec3& vec, const std::string& prop)
+	{
+		glUniform3fv(glGetUniformLocation(programID, prop.c_str()), 1, glm::value_ptr(vec));
+	}
+
+	void Shader::setVec4(glm::vec4& vec, const std::string& prop)
+	{
+		glUniform4fv(glGetUniformLocation(programID, prop.c_str()), 1, glm::value_ptr(vec));
+	}
+
+	void Shader::setFloat(float f, const std::string& prop)
+	{
+		glUniform1f(glGetUniformLocation(programID, prop.c_str()), f);
+	}
+
+	void Shader::use()
+	{
+		glUseProgram(programID);
 	}
 
 	operator int() const { return programID; }

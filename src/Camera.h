@@ -1,8 +1,8 @@
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glfw3.h>
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
+#include <GLFW/glfw3.h>
 
 class Camera
 {
@@ -26,6 +26,11 @@ public:
 		return m_matrix;
 	}
 
+	void IgnoreNextUpdate()
+	{
+		m_shouldIgnoreNextUpdate = true;
+	}
+
 private:
 	glm::mat4 m_projectionMatrix;
 	glm::mat4 m_matrix;
@@ -34,5 +39,7 @@ private:
 	float pitch = 0;
 	float yaw = 0;
 	GLFWwindow* window;
+
+	bool m_shouldIgnoreNextUpdate = true;
 
 };

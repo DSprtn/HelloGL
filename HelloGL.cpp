@@ -1,25 +1,33 @@
-﻿#include <glad.h>
-#include <glfw3.h>
+﻿#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
+#include <glad.h>
+#include <GLFW/glfw3.h>
 #include <iostream>
 #include <chrono>
 #include <math.h>
 #include "HelloGL.h"
 #include "src/Shaders/Shader.h"
+#include <algorithm>
+#include <numeric>
+#include <array>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "include/stb_image.h"
 #include "src/Camera.h"
 
 namespace
 {
 	float uniformAlpha = .2f;
-	double deltaTime = 0;
 	float FOV = 75;
 }
+
+bool locked = true;
 
 // utility function for loading a 2D texture from file
 // ---------------------------------------------------
@@ -32,7 +40,7 @@ unsigned int loadTexture(char const* path)
 	unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
 	if (data)
 	{
-		GLenum format;
+		GLenum format = GL_RED;
 		if (nrComponents == 1)
 			format = GL_RED;
 		else if (nrComponents == 3)
@@ -73,10 +81,20 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void kbCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
-	if (key == GLFW_KEY_ESCAPE)
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 	{
-		glfwSetWindowShouldClose(window, true);
+		//glfwSetWindowShouldClose(window, true);
+		if (locked)
+		{
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
+		else
+		{
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		}
+		locked = !locked;
 	}
+
 	if (key == GLFW_KEY_UP && action == GLFW_PRESS)
 	{
 		uniformAlpha = std::clamp(uniformAlpha += 0.1f, 0.0f, 1.0f);
@@ -87,7 +105,6 @@ void kbCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 	}
 
 }
-
 
 
 int main(int argc, char* argv[])
@@ -228,7 +245,7 @@ int main(int argc, char* argv[])
 	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
@@ -252,76 +269,160 @@ int main(int argc, char* argv[])
 	glfwSetKeyCallback(window, kbCallback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	
+
 	glEnable(GL_DEPTH_TEST);
 
 
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+
 	Camera cam(window);
+
+
+	float lightRadius = 5;
+	float pointLightColor[3]{ 1.0f, 0.7f, .7f };
+
+	float directionalLightColor[3]{ 0.1, 0.1, 0.5 };
+	float directionalLightDirection[3]{ 0.0f, -1.0f, 0.4f};
+
+	
+	constexpr int fpsAvgCount = 30;
+	std::array<float, 30> deltaTimeAverage{};
+	int deltaIndex = 0;
+	
+
+	float moveDeltatimeMultiplier = 1.0f;
+	
+	double totalElapsedTimeByMoveDelta = 0.f;
 
 	while (!glfwWindowShouldClose(window))
 	{
-		computeDelta(lastMeasuredTime, totalElapsedTime);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		cam.Update(deltaTime);
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		double deltaTime = computeDelta(lastMeasuredTime, totalElapsedTime);
+
+		double moveDelta = deltaTime * moveDeltatimeMultiplier;
+		totalElapsedTimeByMoveDelta += moveDelta;
+
+		if (locked)
+		{
+			cam.Update(deltaTime);
+		}
+		else
+		{
+			cam.IgnoreNextUpdate();
+		}
+		
 		cam.SetProjection(FOV, 16.0 / 9.0, 0.1, 1000);
 
+		lightProgram.use();
 
-		glUseProgram(lightProgram);
 		glm::mat4 model = glm::mat4(1.0f);
-		glm::vec3 lightPos = glm::vec3(4 * cosf(totalElapsedTime * .1), 2 * sinf(totalElapsedTime * .1), -2 + 2 *cosf(totalElapsedTime * .1));
-
+		glm::vec3 lightPos = glm::vec3(4 * cosf(totalElapsedTimeByMoveDelta * .1), 2 * sinf(totalElapsedTimeByMoveDelta * .1), -2 + 2 *cosf(totalElapsedTimeByMoveDelta * .1));
+		glm::vec3 lightPosViewspace = cam.Matrix() * glm::vec4(lightPos, 1);
 		model = glm::translate(model, lightPos);
 		model = glm::scale(model, glm::vec3(0.1f));
-
-		glUniformMatrix4fv(glGetUniformLocation(lightProgram, "Projection"), 1, GL_FALSE, glm::value_ptr(cam.ProjectionMatrix()));
-		glUniformMatrix4fv(glGetUniformLocation(lightProgram, "View"), 1, GL_FALSE, glm::value_ptr(cam.Matrix()));
-		glUniformMatrix4fv(glGetUniformLocation(lightProgram, "Model"), 1, GL_FALSE, glm::value_ptr(model));
+		glm::vec3 lightColor = glm::vec3(pointLightColor[0], pointLightColor[1], pointLightColor[2]);
 
 
-		glm::vec3 lightColor = glm::vec3(1.0f,0.0f,.0f);
-		glUniform3fv(glGetUniformLocation(lightProgram, "LightCol"), 1, glm::value_ptr(lightColor));
+
+		lightProgram.SetMat4(cam.ProjectionMatrix(), "Projection");
+		lightProgram.SetMat4(cam.Matrix(), "View");
+		lightProgram.SetMat4(model, "Model");		
+		lightProgram.setVec3(lightColor, "LightCol");
+		
 		glBindVertexArray(lightVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		glUseProgram(defaultProgram);
+
+		glm::vec3 directionalLightDir = cam.Matrix() * glm::normalize(glm::vec4(directionalLightDirection[0], directionalLightDirection[1], directionalLightDirection[2], 0.0f)) ;
+		glm::vec3 dirLightColor = glm::vec3(directionalLightColor[0], directionalLightColor[1], directionalLightColor[2]);
+
+		defaultProgram.use();
 		
-		glUniform3fv(glGetUniformLocation(defaultProgram, "light.position"), 1, glm::value_ptr(cam.Matrix()* glm::vec4(lightPos,1)));
-		glUniform3fv(glGetUniformLocation(defaultProgram, "light.color"), 1, glm::value_ptr(lightColor));
+		// Point light
+		defaultProgram.setVec3(lightPosViewspace, "light.position");
+		defaultProgram.setVec3(lightColor, "light.color");
+		defaultProgram.setFloat(lightRadius, "light.radius");
 
-		glUniform4f(glGetUniformLocation(defaultProgram, "globalCol"), (1 + static_cast<float>(sin(totalElapsedTime * 2))), 0.0f, 0.0f, uniformAlpha);
+		// Directional light
+		defaultProgram.setVec3(directionalLightDir, "directionalLight.direction");
+		defaultProgram.setVec3(dirLightColor, "directionalLight.color");
 
-		glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "Projection"), 1, GL_FALSE, glm::value_ptr(cam.ProjectionMatrix()));
-		glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "View"), 1, GL_FALSE, glm::value_ptr(cam.Matrix()));
-		
+		glm::vec4 globalCol = glm::vec4(1 + static_cast<float>(sin(totalElapsedTimeByMoveDelta * 2)), 0.0f, 0.0f, uniformAlpha);
 
-		std::cout << totalElapsedTime << std::endl;
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		defaultProgram.setVec4(globalCol, "globalCol");
+
+		defaultProgram.SetMat4(cam.ProjectionMatrix(), "Projection");
+		defaultProgram.SetMat4(cam.Matrix(), "View");
+
 
 		for (int i = 0; i < 13; i++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, cubePositions[i]);
 			
-			// model = glm::rotate(model, (float)totalElapsedTime * glm::radians(5.0f * i + 5.5f), glm::vec3(1.0f, .3f, 0.5f));
-
-			 
+			model = glm::rotate(model, (float)totalElapsedTimeByMoveDelta * glm::radians(5.0f * i + 5.5f), glm::vec3(1.0f, .3f, 0.5f));
 
 			glm::mat4 normal = glm::transpose(glm::inverse(model));
-			glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "Normal"), 1, GL_FALSE, glm::value_ptr(normal));
-			glUniformMatrix4fv(glGetUniformLocation(defaultProgram, "Model"), 1, GL_FALSE, glm::value_ptr(model));
-			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+			defaultProgram.SetMat4(normal, "Normal");
+			defaultProgram.SetMat4(model, "Model");
+
 			glBindVertexArray(VAO);
-			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
+		ImGui::Begin("Point light settings");
+		ImGui::SliderFloat("Radius", &lightRadius, 0.1f, 20.0f);
+		ImGui::ColorEdit3("Color", &pointLightColor[0]);
+		ImGui::End();
 
+
+		ImGui::Begin("Directional light settings");
+
+		ImGui::DragFloat3("Direction", &directionalLightDirection[0], 0.01f, -1.0f, 1.0f);
+		ImGui::ColorEdit3("Color", &directionalLightColor[0]);
+		ImGui::End();
+
+		ImGui::Begin("Simulation info");
+		
+
+		deltaTimeAverage[deltaIndex] = deltaTime;
+		deltaIndex += 1;
+		if (deltaIndex > deltaTimeAverage.size() - 1)
+		{
+			deltaIndex = 0;
+		}
+
+		float avg = std::accumulate(deltaTimeAverage.begin(), deltaTimeAverage.end(), 0.0f) / deltaTimeAverage.size();
+
+
+		auto str = "FPS: " + std::to_string(1 / avg);
+		ImGui::Text(str.c_str());
+		ImGui::SliderFloat("Delta time", &moveDeltatimeMultiplier, 0.0f, 5.0f);
+		ImGui::End();
+
+		ImGui::Render();
+
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 
 	glfwTerminate();
 
@@ -329,7 +430,7 @@ int main(int argc, char* argv[])
 }
 
 
-void computeDelta(std::chrono::steady_clock::time_point& last, double& totalElapsed)
+double computeDelta(std::chrono::steady_clock::time_point& last, double& totalElapsed)
 {
 	auto now = std::chrono::high_resolution_clock::now();
 	const auto elapsed = std::chrono::high_resolution_clock::now() - last;
@@ -338,7 +439,7 @@ void computeDelta(std::chrono::steady_clock::time_point& last, double& totalElap
 	totalElapsed += currentElapsed;
 	last = now;
 
-	deltaTime = currentElapsed;
+	return currentElapsed;
 }
 
 

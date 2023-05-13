@@ -5,7 +5,6 @@ namespace {
 	double lastCursorX = 0;
 	double lastCursorY = 0;
 	double lastMouseScrollY = 0;
-	bool firstCursorPosReceived = false;
 }
 
 
@@ -60,13 +59,12 @@ void Camera::Update(double deltaTime)
 	double xDelta = cursorPosX - lastCursorX;
 	double yDelta = cursorPosY - lastCursorY;
 
-
 	lastCursorX = cursorPosX;
 	lastCursorY = cursorPosY;
 
-	if (!firstCursorPosReceived)
+	if (m_shouldIgnoreNextUpdate)
 	{
-		firstCursorPosReceived = true;
+		m_shouldIgnoreNextUpdate = false;
 		return;
 	}
 

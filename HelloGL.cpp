@@ -310,6 +310,7 @@ int main(int argc, char* argv[])
 	float spotLightPosition[3]{ 0.0f, 3.0f, 0.0f };
 	float spotLightColor[3]{ 0.9, 0.1, 0.1 };
 	float spotLightIntensity = 1.0f;
+	bool  spotLightMountToHead = false;
 
 	
 	constexpr int fpsAvgCount = 30;
@@ -404,6 +405,13 @@ int main(int argc, char* argv[])
 
 		defaultProgram.setVec3(spotLightDir, "spotlight.direction");
 		defaultProgram.setVec3(spotLightPos, "spotlight.position");
+
+		if (spotLightMountToHead)
+		{
+			defaultProgram.setVec3(glm::vec3(0,0,-1), "spotlight.direction");
+			defaultProgram.setVec3(glm::vec3(), "spotlight.position");
+		}
+
 		defaultProgram.setVec3(spotLightCol, "spotlight.color");
 		defaultProgram.setFloat(spotLightRange, "spotlight.range");
 		defaultProgram.setFloat(spotLightIntensity, "spotlight.intensity");
@@ -473,6 +481,7 @@ int main(int argc, char* argv[])
 		ImGui::SliderFloat("OuterCone", &spotLightOuterCone, std::max(spotLightInnerCone, 0.0f), 90.0f);
 		ImGui::DragFloat3("Position", &spotLightPosition[0], 0.05f, -25.0f, 25.0f);
 		ImGui::DragFloat3("Direction", &spotLightDirection[0], 0.01f, -1.0f, 1.0f);
+		ImGui::Checkbox("Mount to head", &spotLightMountToHead);
 		ImGui::End();
 
 		ImGui::Begin("Simulation info");

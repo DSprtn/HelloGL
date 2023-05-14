@@ -297,14 +297,19 @@ int main(int argc, char* argv[])
 
 	float lightRadius = 5;
 	float pointLightColor[3]{ 1.0f, 0.7f, .7f };
+	float pointLightIntensity = 1.0f;
 
 	float directionalLightColor[3]{ 0.1, 0.1, 0.5 };
 	float directionalLightDirection[3]{ 0.0f, -1.0f, 0.4f };
+	float directionalLightIntensity = 1.0f;
 
-	float spotLightColor[3]{ 0.1, 0.1, 0.5 };
+	float spotLightInnerCone = 12.5f;
+	float spotLightOuterCone = 25.0f;
 	float spotLightRange = 5.0f;
 	float spotLightDirection[3]{ 0.0f, -1.0f, 0.5f };
 	float spotLightPosition[3]{ 0.0f, 3.0f, 0.0f };
+	float spotLightColor[3]{ 0.9, 0.1, 0.1 };
+	float spotLightIntensity = 1.0f;
 
 	
 	constexpr int fpsAvgCount = 30;
@@ -354,6 +359,8 @@ int main(int argc, char* argv[])
 		
 		cam.SetProjection(FOV, 16.0 / 9.0, 0.1, 1000);
 
+#pragma region Setup_Lights
+
 		lightProgram.use();
 
 		glm::mat4 model = glm::mat4(1.0f);
@@ -362,8 +369,6 @@ int main(int argc, char* argv[])
 		model = glm::translate(model, lightPos);
 		model = glm::scale(model, glm::vec3(0.1f));
 		glm::vec3 lightColor = glm::vec3(pointLightColor[0], pointLightColor[1], pointLightColor[2]);
-
-
 
 		lightProgram.SetMat4(cam.ProjectionMatrix(), "Projection");
 		lightProgram.SetMat4(cam.Matrix(), "View");
@@ -377,24 +382,43 @@ int main(int argc, char* argv[])
 		glm::vec3 directionalLightDir = cam.Matrix() * glm::normalize(glm::vec4(directionalLightDirection[0], directionalLightDirection[1], directionalLightDirection[2], 0.0f)) ;
 		glm::vec3 dirLightColor = glm::vec3(directionalLightColor[0], directionalLightColor[1], directionalLightColor[2]);
 
+		glm::vec3 spotLightDir = cam.Matrix() * glm::normalize(glm::vec4(spotLightDirection[0], spotLightDirection[1], spotLightDirection[2], 0.0f));
+		glm::vec3 spotLightPos = cam.Matrix() * glm::vec4(spotLightPosition[0], spotLightPosition[1], spotLightPosition[2], 1);
+		glm::vec3 spotLightCol = glm::vec3(spotLightColor[0], spotLightColor[1], spotLightColor[2]);
+
 		defaultProgram.use();
 		
 		// Point light
 		defaultProgram.setVec3(lightPosViewspace, "light.position");
 		defaultProgram.setVec3(lightColor, "light.color");
 		defaultProgram.setFloat(lightRadius, "light.radius");
+		defaultProgram.setFloat(pointLightIntensity, "light.intensity");
 
 		// Directional light
 		defaultProgram.setVec3(directionalLightDir, "directionalLight.direction");
 		defaultProgram.setVec3(dirLightColor, "directionalLight.color");
+		defaultProgram.setFloat(directionalLightIntensity, "directionalLight.intensity");
+
+		// Spot light
+		spotLightOuterCone = std::max(spotLightOuterCone, spotLightInnerCone);
+
+		defaultProgram.setVec3(spotLightDir, "spotlight.direction");
+		defaultProgram.setVec3(spotLightPos, "spotlight.position");
+		defaultProgram.setVec3(spotLightCol, "spotlight.color");
+		defaultProgram.setFloat(spotLightRange, "spotlight.range");
+		defaultProgram.setFloat(spotLightIntensity, "spotlight.intensity");
+		defaultProgram.setFloat(glm::cos(glm::radians(spotLightInnerCone)), "spotlight.innerCone");
+		defaultProgram.setFloat(glm::cos(glm::radians(spotLightOuterCone)), "spotlight.outerCone");
 
 		glm::vec4 globalCol = glm::vec4(1 + static_cast<float>(sin(totalElapsedTimeByMoveDelta * 2)), 0.0f, 0.0f, uniformAlpha);
 
 		defaultProgram.setVec4(globalCol, "globalCol");
 
+#pragma endregion
+
+#pragma region drawMeshes
 		defaultProgram.SetMat4(cam.ProjectionMatrix(), "Projection");
 		defaultProgram.SetMat4(cam.Matrix(), "View");
-
 
 		for (int i = 0; i < 13; i++)
 		{
@@ -411,8 +435,47 @@ int main(int argc, char* argv[])
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
-		ImGui::Begin("Scene settings");
-		ImGui::Text("Simulation info");
+		glm::mat4 floorModel = glm::mat4(1.0f);
+		floorModel = glm::translate(floorModel, glm::vec3(0, -55.0f, 0));
+		floorModel = glm::scale(floorModel, glm::vec3(100.0f));
+
+		glm::mat4 normal = glm::transpose(glm::inverse(floorModel));
+		defaultProgram.SetMat4(normal, "Normal");
+		defaultProgram.SetMat4(floorModel, "Model");
+		glBindVertexArray(VAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+#pragma endregion
+
+#pragma region ImGui
+
+		ImGui::Begin("Point light settings");
+		ImGui::InputFloat("Intensity", &pointLightIntensity);
+		ImGui::SliderFloat("Radius", &lightRadius, 0.1f, 20.0f);
+		ImGui::ColorEdit3("Color", &pointLightColor[0]);
+
+		ImGui::End();
+
+
+		ImGui::Begin("Directional light settings");
+		ImGui::InputFloat("Intensity", &directionalLightIntensity);
+		ImGui::DragFloat3("Direction", &directionalLightDirection[0], 0.01f, -1.0f, 1.0f);
+		ImGui::ColorEdit3("Color", &directionalLightColor[0]);
+		ImGui::End();
+
+
+		ImGui::Begin("Spotlight settings");
+
+		ImGui::InputFloat("Intensity", &spotLightIntensity);
+		ImGui::SliderFloat("Range", &spotLightRange, 0.1f, 100.0f);
+		ImGui::ColorEdit3("Color", &spotLightColor[0]);
+		ImGui::SliderFloat("InnerCone", &spotLightInnerCone, 0.00f, 90.0f);
+		ImGui::SliderFloat("OuterCone", &spotLightOuterCone, std::max(spotLightInnerCone, 0.0f), 90.0f);
+		ImGui::DragFloat3("Position", &spotLightPosition[0], 0.05f, -25.0f, 25.0f);
+		ImGui::DragFloat3("Direction", &spotLightDirection[0], 0.01f, -1.0f, 1.0f);
+		ImGui::End();
+
+		ImGui::Begin("Simulation info");
 		
 
 		deltaTimeAverage[deltaIndex] = deltaTime;
@@ -426,35 +489,14 @@ int main(int argc, char* argv[])
 
 
 		auto str = "FPS: " + std::to_string(1 / avg);
-
 		ImGui::Text(str.c_str());
 		ImGui::SliderFloat("Delta time", &moveDeltatimeMultiplier, 0.0f, 5.0f);
-
-		ImGui::BeginChild("Point light settings");
-		ImGui::SliderFloat("Radius", &lightRadius, 0.1f, 20.0f);
-		ImGui::ColorEdit3("Color", &pointLightColor[0]);
-
-
-		ImGui::Text("Directional light settings");
-
-		ImGui::DragFloat3("Direction", &directionalLightDirection[0], 0.01f, -1.0f, 1.0f);
-		ImGui::ColorEdit3("Color", &directionalLightColor[0]);
-
-
-
-		ImGui::Text("Spotlight settings");
-
-		ImGui::DragFloat3("Direction", &spotLightDirection[0], 0.01f, -1.0f, 1.0f);
-		ImGui::ColorEdit3("Color", &spotLightColor[0]);
-		ImGui::SliderFloat("Range", &spotLightRange, 0.1f, 20.0f);
-		ImGui::DragFloat3("Position", &spotLightPosition[0], 0.05f, -25.0f, 25.0f);
-		ImGui::EndChild();
-
 		ImGui::End();
 
 		ImGui::Render();
-
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+#pragma endregion 
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);

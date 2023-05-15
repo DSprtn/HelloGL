@@ -32,7 +32,7 @@ bool shouldReloadShaders = false;
 
 // utility function for loading a 2D texture from file
 // ---------------------------------------------------
-unsigned int loadTexture(char const* path)
+unsigned int loadTexture(char const* path, bool sRGB = false)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
@@ -42,15 +42,30 @@ unsigned int loadTexture(char const* path)
 	if (data)
 	{
 		GLenum format = GL_RED;
+		
 		if (nrComponents == 1)
 			format = GL_RED;
 		else if (nrComponents == 3)
 			format = GL_RGB;
 		else if (nrComponents == 4)
 			format = GL_RGBA;
+		
+		GLenum internalFormat = format;
+		
+		if (sRGB)
+		{
+			if (nrComponents == 3)
+			{
+				internalFormat = GL_SRGB;
+			}
+			else if (nrComponents == 4)
+			{
+				internalFormat = GL_SRGB_ALPHA;
+			}
+		}
 
 		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -157,9 +172,9 @@ int main(int argc, char* argv[])
 #pragma region Load textures
 
 
-	unsigned int diffuse = loadTexture("img/container2.png");
+	unsigned int diffuse = loadTexture("img/container2.png", true);
 	unsigned int specular = loadTexture("img/container2_specular.png");
-	unsigned int emissive = loadTexture("img/matrix.jpg");
+	unsigned int emissive = loadTexture("img/matrix.jpg", true);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, diffuse);
@@ -305,7 +320,7 @@ int main(int argc, char* argv[])
 	};
 	float pointLightIntensity[4] = { 1,1,1,1 };
 
-	float directionalLightColor[3]{ 0.1, 0.1, 0.5 };
+	float directionalLightColor[3]{ 0.05, 0.05, 0.25 };
 	float directionalLightDirection[3]{ 0.0f, -1.0f, 0.4f };
 	float directionalLightIntensity = 1.0f;
 
@@ -467,6 +482,8 @@ int main(int argc, char* argv[])
 			glm::mat4 normal = glm::transpose(glm::inverse(model));
 			defaultProgram.SetMat4(normal, "Normal");
 			defaultProgram.SetMat4(model, "Model");
+
+			glEnable(GL_FRAMEBUFFER_SRGB);
 
 			glBindVertexArray(VAO);
 			glDrawArrays(GL_TRIANGLES, 0, 36);

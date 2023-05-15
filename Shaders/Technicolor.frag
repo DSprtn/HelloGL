@@ -63,25 +63,23 @@ vec3 getSpotLightContribution(Spotlight light, vec3 normal, vec3 fragPos, vec3 v
 	vec3 emissive = vec3(texture(material.emissive, textureCoord));
 
 	vec3 dirToLight = normalize(light.position - vec3(viewSpacePos));
-	vec3 reflectDir = reflect(-dirToLight, normal);
+	vec3 halfwayDir = normalize(viewDir + dirToLight);
 	
-	vec3 diffuse = clamp(dot(dirToLight, normal), 0.0, 1.0) * light.color;
-	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64);
-	vec3 specular = texSpecular * spec * light.color;
+	vec3 diffuse = clamp(dot(dirToLight, normal), 0.0, 1.0) * light.color * texDiffuse;
+	vec3 specular = pow(max(dot(normal, halfwayDir), 0.0), 128) * texSpecular * light.color;
 
-	vec3 ambient = light.color * .1;
+	vec3 ambient = texDiffuse * light.color * .1;
 
 	float d = length(light.position - vec3(viewSpacePos));
 	float attenuation = attenuate(d,light.range);
 
-	
 	float spotdirToLightDot = dot(-light.direction, dirToLight);
 
 	float epsilon   = light.innerCone - light.outerCone;
 	float intensity = (spotdirToLightDot - light.outerCone) / epsilon;
 	float coneContribution = clamp(intensity, 0.0, 1.0); 
 
-	return vec3(light.intensity) * ( clamp(coneContribution,0,1) * attenuation * (texDiffuse * (diffuse + ambient) + specular));
+	return vec3(light.intensity) * (clamp(coneContribution,0,1) * attenuation * (diffuse + ambient + specular));
 }
 
 vec3 getPointLightContribution(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
@@ -91,36 +89,34 @@ vec3 getPointLightContribution(PointLight light, vec3 normal, vec3 fragPos, vec3
 	vec3 emissive = vec3(texture(material.emissive, textureCoord));
 
 	vec3 dirToLight = normalize(light.position - vec3(viewSpacePos));
-	vec3 reflectDir = reflect(-dirToLight, normal);
+	vec3 halfwayDir = normalize(dirToLight + viewDir);
 	
-	vec3 diffuse = clamp(dot(dirToLight, normal), 0.0, 1.0) * light.color;
-	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64);
-	vec3 specular = texSpecular * spec * light.color;
+	vec3 diffuse = clamp(dot(dirToLight, normal), 0.0, 1.0) * light.color * texDiffuse;
+	vec3 specular = pow(max(dot(normal, halfwayDir), 0.0), 128) * texSpecular * light.color;
 
-	vec3 ambient = light.color * .1;
+	vec3 ambient = texDiffuse * light.color * .05;
 
 	float d = length(light.position - vec3(viewSpacePos));
 	float attenuation = attenuate(d,light.radius);
 
-	return vec3(light.intensity) * (attenuation * (texDiffuse * (diffuse + ambient) + specular));
+	return vec3(light.intensity) * attenuation * (diffuse + ambient + specular);
 }
 
 vec3 getDirectionalLightContribution(DirectionalLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
+	vec3 texDiffuse = vec3(texture(material.diffuse, textureCoord));
 	vec3 texSpecular = vec3(texture(material.specular, textureCoord));
+	vec3 emissive = vec3(texture(material.emissive, textureCoord));
+
 	vec3 dirToLight = -light.direction;
-	vec3 diffuse = clamp(dot(dirToLight, normal), 0.0, 1.0) * light.color;
+	vec3 halfwayDir = normalize(dirToLight + viewDir);
+	
+	vec3 diffuse = clamp(dot(dirToLight, normal), 0.0, 1.0) * light.color * texDiffuse;
+	vec3 specular = pow(max(dot(normal, halfwayDir), 0.0), 64) * texSpecular * light.color;
 
-	vec3 reflectDir = reflect(-dirToLight, normal);
-	float specularStrength = 1.0f;
+	vec3 ambient = texDiffuse * light.color * .1;
 
-	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 256);
-
-	vec3 specular = texSpecular * spec * light.color;
-
-	vec3 ambient = 0.01 * light.color;
-
-	return vec3(light.intensity) * (vec3(texture(material.diffuse, textureCoord)) * diffuse + specular + ambient);
+	return light.intensity * (diffuse + specular + ambient);
 }
 
 void main()

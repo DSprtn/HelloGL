@@ -35,7 +35,9 @@ struct Spotlight
 	float intensity;
 };
 
-uniform PointLight light;
+#define POINT_LIGHT_COUNT 4
+
+uniform PointLight pointLights[POINT_LIGHT_COUNT];
 uniform DirectionalLight directionalLight;
 uniform Spotlight spotlight;
 
@@ -124,8 +126,13 @@ vec3 getDirectionalLightContribution(DirectionalLight light, vec3 normal, vec3 f
 void main()
 {
 	vec3 viewDir = normalize(vec3(-viewSpacePos));
-	vec3 col = getPointLightContribution(light, normal, vec3(viewSpacePos), viewDir);
-	col += getDirectionalLightContribution(directionalLight, normal,vec3(viewSpacePos), viewDir);
+	vec3 col = getDirectionalLightContribution(directionalLight, normal,vec3(viewSpacePos), viewDir);
+
+	for(int i = 0; i < POINT_LIGHT_COUNT; i++)
+	{
+		col += getPointLightContribution(pointLights[i], normal, vec3(viewSpacePos), viewDir);
+	}
+
 	col += getSpotLightContribution(spotlight, normal, vec3(viewSpacePos), viewDir);
 	
 	FragColor = vec4(col, 1);

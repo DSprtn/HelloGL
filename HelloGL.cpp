@@ -295,9 +295,15 @@ int main(int argc, char* argv[])
 	Camera cam(window);
 
 
-	float lightRadius = 5;
-	float pointLightColor[3]{ 1.0f, 0.7f, .7f };
-	float pointLightIntensity = 1.0f;
+	float lightRadius[4] = {5,5,5,5};
+	float pointLightColor[4][3]
+	{
+		{ 1.0f, 0.7f, .7f },
+		{ 1.0f, 0.0f, 0.0f },
+		{ 0.0f, 1.0f, 0.0f },
+		{ 0.0f, 0.0f, 1.0f } 
+	};
+	float pointLightIntensity[4] = { 1,1,1,1 };
 
 	float directionalLightColor[3]{ 0.1, 0.1, 0.5 };
 	float directionalLightDirection[3]{ 0.0f, -1.0f, 0.4f };
@@ -362,25 +368,54 @@ int main(int argc, char* argv[])
 
 #pragma region Setup_Lights
 
-		lightProgram.use();
 
-		glm::mat4 model = glm::mat4(1.0f);
-		glm::vec3 lightPos = glm::vec3(4 * cosf(totalElapsedTimeByMoveDelta * .1), 2 * sinf(totalElapsedTimeByMoveDelta * .1), -2 + 2 *cosf(totalElapsedTimeByMoveDelta * .1));
-		glm::vec3 lightPosViewspace = cam.Matrix() * glm::vec4(lightPos, 1);
-		model = glm::translate(model, lightPos);
-		model = glm::scale(model, glm::vec3(0.1f));
-		glm::vec3 lightColor = glm::vec3(pointLightColor[0], pointLightColor[1], pointLightColor[2]);
+		ImGui::Begin("Light settings");
 
-		lightProgram.SetMat4(cam.ProjectionMatrix(), "Projection");
-		lightProgram.SetMat4(cam.Matrix(), "View");
-		lightProgram.SetMat4(model, "Model");		
-		lightProgram.setVec3(lightColor, "LightCol");
-		
-		glBindVertexArray(lightVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		const int numPointLights = 4;
+		for (int i = 0; i < numPointLights; i++)
+		{
+			lightProgram.use();
 
+			glm::mat4 model = glm::mat4(1.0f);
+			glm::vec3 lightPos = glm::vec3(4 * cosf(totalElapsedTimeByMoveDelta * .1),4 * sinf(totalElapsedTimeByMoveDelta * .1), -2 + 4 * cosf(totalElapsedTimeByMoveDelta * .1));
+			lightPos += glm::vec3((i + 1) * 3, 0, -(i + 1) * 2);
+			lightPos -= glm::vec3(10, 0, -5);
+			glm::vec3 lightPosViewspace = cam.Matrix() * glm::vec4(lightPos, 1);
+			model = glm::translate(model, lightPos);
+			model = glm::scale(model, glm::vec3(0.1f));
+			glm::vec3 lightColor = glm::vec3(pointLightColor[i][0], pointLightColor[i][1], pointLightColor[i][2]);
 
-		glm::vec3 directionalLightDir = cam.Matrix() * glm::normalize(glm::vec4(directionalLightDirection[0], directionalLightDirection[1], directionalLightDirection[2], 0.0f)) ;
+			lightProgram.SetMat4(cam.ProjectionMatrix(), "Projection");
+			lightProgram.SetMat4(cam.Matrix(), "View");
+			lightProgram.SetMat4(model, "Model");
+			lightProgram.setVec3(lightColor, "LightCol");
+
+			glBindVertexArray(lightVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+
+			defaultProgram.use();
+
+			const std::string currLight = "pointLights[" + std::to_string(i) + "]";
+
+			// Point light
+			defaultProgram.setVec3(lightPosViewspace, currLight + ".position");
+			defaultProgram.setVec3(lightColor, currLight + ".color");
+			defaultProgram.setFloat(lightRadius[i], currLight + ".radius");
+			defaultProgram.setFloat(pointLightIntensity[i], currLight + ".intensity");
+
+			const std::string settingStr = "Lights.PointLight[" + std::to_string(i) + "]";
+
+			if (ImGui::TreeNode(settingStr.c_str()))
+			{
+				ImGui::InputFloat("Intensity", &pointLightIntensity[i]);
+				ImGui::SliderFloat("Radius", &lightRadius[i], 0.1f, 20.0f);
+				ImGui::ColorEdit3("Color", &pointLightColor[i][0]);
+				ImGui::TreePop();
+			}
+
+		}
+
+		glm::vec3 directionalLightDir = cam.Matrix() * glm::normalize(glm::vec4(directionalLightDirection[0], directionalLightDirection[1], directionalLightDirection[2], 0.0f));
 		glm::vec3 dirLightColor = glm::vec3(directionalLightColor[0], directionalLightColor[1], directionalLightColor[2]);
 
 		glm::vec3 spotLightDir = cam.Matrix() * glm::normalize(glm::vec4(spotLightDirection[0], spotLightDirection[1], spotLightDirection[2], 0.0f));
@@ -388,12 +423,6 @@ int main(int argc, char* argv[])
 		glm::vec3 spotLightCol = glm::vec3(spotLightColor[0], spotLightColor[1], spotLightColor[2]);
 
 		defaultProgram.use();
-		
-		// Point light
-		defaultProgram.setVec3(lightPosViewspace, "light.position");
-		defaultProgram.setVec3(lightColor, "light.color");
-		defaultProgram.setFloat(lightRadius, "light.radius");
-		defaultProgram.setFloat(pointLightIntensity, "light.intensity");
 
 		// Directional light
 		defaultProgram.setVec3(directionalLightDir, "directionalLight.direction");
@@ -457,34 +486,31 @@ int main(int argc, char* argv[])
 
 #pragma region ImGui
 
-		ImGui::Begin("Point light settings");
-		ImGui::InputFloat("Intensity", &pointLightIntensity);
-		ImGui::SliderFloat("Radius", &lightRadius, 0.1f, 20.0f);
-		ImGui::ColorEdit3("Color", &pointLightColor[0]);
 
+
+
+		if (ImGui::TreeNode("Lights.DirectionalLight"))
+		{
+			ImGui::InputFloat("Intensity", &directionalLightIntensity);
+			ImGui::DragFloat3("Direction", &directionalLightDirection[0], 0.01f, -1.0f, 1.0f);
+			ImGui::ColorEdit3("Color", &directionalLightColor[0]);
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("Lights.Spotlight"))
+		{
+			ImGui::InputFloat("Intensity", &spotLightIntensity);
+			ImGui::SliderFloat("Range", &spotLightRange, 0.1f, 100.0f);
+			ImGui::ColorEdit3("Color", &spotLightColor[0]);
+			ImGui::SliderFloat("InnerCone", &spotLightInnerCone, 0.00f, 90.0f);
+			ImGui::SliderFloat("OuterCone", &spotLightOuterCone, std::max(spotLightInnerCone, 0.0f), 90.0f);
+			ImGui::DragFloat3("Position", &spotLightPosition[0], 0.05f, -25.0f, 25.0f);
+			ImGui::DragFloat3("Direction", &spotLightDirection[0], 0.01f, -1.0f, 1.0f);
+			ImGui::Checkbox("Mount to head", &spotLightMountToHead);
+			ImGui::TreePop();
+		}
 		ImGui::End();
-
-
-		ImGui::Begin("Directional light settings");
-		ImGui::InputFloat("Intensity", &directionalLightIntensity);
-		ImGui::DragFloat3("Direction", &directionalLightDirection[0], 0.01f, -1.0f, 1.0f);
-		ImGui::ColorEdit3("Color", &directionalLightColor[0]);
-		ImGui::End();
-
-
-		ImGui::Begin("Spotlight settings");
-
-		ImGui::InputFloat("Intensity", &spotLightIntensity);
-		ImGui::SliderFloat("Range", &spotLightRange, 0.1f, 100.0f);
-		ImGui::ColorEdit3("Color", &spotLightColor[0]);
-		ImGui::SliderFloat("InnerCone", &spotLightInnerCone, 0.00f, 90.0f);
-		ImGui::SliderFloat("OuterCone", &spotLightOuterCone, std::max(spotLightInnerCone, 0.0f), 90.0f);
-		ImGui::DragFloat3("Position", &spotLightPosition[0], 0.05f, -25.0f, 25.0f);
-		ImGui::DragFloat3("Direction", &spotLightDirection[0], 0.01f, -1.0f, 1.0f);
-		ImGui::Checkbox("Mount to head", &spotLightMountToHead);
-		ImGui::End();
-
-		ImGui::Begin("Simulation info");
+		ImGui::Begin("Simulation");
 		
 
 		deltaTimeAverage[deltaIndex] = deltaTime;
@@ -499,7 +525,7 @@ int main(int argc, char* argv[])
 
 		auto str = "FPS: " + std::to_string(1 / avg);
 		ImGui::Text(str.c_str());
-		ImGui::SliderFloat("Delta time", &moveDeltatimeMultiplier, 0.0f, 5.0f);
+		ImGui::SliderFloat("Delta time", &moveDeltatimeMultiplier, 0.0f, 20.0f);
 		ImGui::End();
 
 		ImGui::Render();

@@ -1,8 +1,10 @@
-﻿#include <imgui.h>
+﻿
+#include <imgui.h>
+
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
-#include <glad.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <chrono>
@@ -13,13 +15,14 @@
 #include <numeric>
 #include <array>
 
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "include/stb_image.h"
+#include <stb_image.h>
 #include "src/Camera.h"
+#include <Model.h>
 
 namespace
 {
@@ -29,60 +32,6 @@ namespace
 
 bool locked = true;
 bool shouldReloadShaders = false;
-
-// utility function for loading a 2D texture from file
-// ---------------------------------------------------
-unsigned int loadTexture(char const* path, bool sRGB = false)
-{
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
-
-	int width, height, nrComponents;
-	unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
-	if (data)
-	{
-		GLenum format = GL_RED;
-		
-		if (nrComponents == 1)
-			format = GL_RED;
-		else if (nrComponents == 3)
-			format = GL_RGB;
-		else if (nrComponents == 4)
-			format = GL_RGBA;
-		
-		GLenum internalFormat = format;
-		
-		if (sRGB)
-		{
-			if (nrComponents == 3)
-			{
-				internalFormat = GL_SRGB;
-			}
-			else if (nrComponents == 4)
-			{
-				internalFormat = GL_SRGB_ALPHA;
-			}
-		}
-
-		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		stbi_image_free(data);
-	}
-	else
-	{
-		std::cout << "Texture failed to load at path: " << path << std::endl;
-		stbi_image_free(data);
-	}
-
-	return textureID;
-}
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
@@ -99,7 +48,6 @@ void kbCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 	{
-		//glfwSetWindowShouldClose(window, true);
 		if (locked)
 		{
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -127,13 +75,11 @@ void kbCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 	{
 		uniformAlpha = std::clamp(uniformAlpha -= 0.1f, 0.0f, 1.0f);
 	}
-
 }
 
 
 int main(int argc, char* argv[])
 {
-
 	int resX = 1366;
 	int resY = 768;
 
@@ -165,130 +111,6 @@ int main(int argc, char* argv[])
 
 #pragma endregion
 
-
-	auto defaultProgram = Shader("Shaders/Technicolor.vert", "Shaders/Technicolor.frag");
-	auto lightProgram = Shader("Shaders/Light.vert", "Shaders/Light.frag");
-
-#pragma region Load textures
-
-
-	unsigned int diffuse = loadTexture("img/container2.png", true);
-	unsigned int specular = loadTexture("img/container2_specular.png");
-	unsigned int emissive = loadTexture("img/matrix.jpg", true);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, diffuse);
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, specular);
-
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, emissive);
-
-	glUseProgram(defaultProgram);
-	defaultProgram.setUniform1i(0, "material.diffuse");
-	defaultProgram.setUniform1i(1, "material.specular");
-	defaultProgram.setUniform1i(2, "material.emissive");
-
-
-#pragma endregion
-
-#pragma region create/bind meshes
-
-
-	float cube[] = {
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
-
-
-	};
-
-
-	glm::vec3 cubePositions[] = {
-		glm::vec3(0.0f,  5.0f,  0.0f),
-		glm::vec3(2.0f,  5.0f, -15.0f),
-		glm::vec3(-1.5f, -2.2f, -2.5f),
-		glm::vec3(-3.8f, -2.0f, -12.3f),
-		glm::vec3(2.4f, -0.4f, -3.5f),
-		glm::vec3(-1.7f,  3.0f, -7.5f),
-		glm::vec3(1.3f, -2.0f, -2.5f),
-		glm::vec3(1.5f,  2.0f, -2.5f),
-		glm::vec3(1.5f,  0.2f, -1.5f),
-		glm::vec3(-1.3f,  1.0f, -1.5f),
-		glm::vec3(0,10,0),
-		glm::vec3(10,0,0),
-		glm::vec3(0,0,10)
-	};
-
-
-	unsigned int VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	unsigned int VBO;
-	glGenBuffers(1, &VBO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-
-	// Light Cube
-	unsigned int lightVAO;
-	glGenVertexArrays(1, &lightVAO);
-	glBindVertexArray(lightVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-
-#pragma endregion
-
 	auto lastMeasuredTime = std::chrono::high_resolution_clock::now();
 	double totalElapsedTime = 0.0;
 
@@ -296,19 +118,12 @@ int main(int argc, char* argv[])
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	glEnable(GL_DEPTH_TEST);
-
-
-
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui::StyleColorsDark();
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
-
-	Camera cam(window);
-
 
 	float lightRadius[4] = {5,5,5,5};
 	float pointLightColor[4][3]
@@ -333,15 +148,24 @@ int main(int argc, char* argv[])
 	float spotLightIntensity = 1.0f;
 	bool  spotLightMountToHead = false;
 
-	
 	constexpr int fpsAvgCount = 30;
 	std::array<float, 30> deltaTimeAverage{};
 	int deltaIndex = 0;
 	
-
 	float moveDeltatimeMultiplier = 1.0f;
 	
 	double totalElapsedTimeByMoveDelta = 0.f;
+
+	Camera cam(window);
+
+	Shader defaultProgram = Shader("Shaders/Technicolor.vert", "Shaders/Technicolor.frag");
+	Shader lightProgram = Shader("Shaders/Light.vert", "Shaders/Light.frag");
+
+	Model cube("assets/model/cube/cube.obj");
+	Model sponza("assets/model/sponza/sponza.obj");
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_FRAMEBUFFER_SRGB);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -383,7 +207,6 @@ int main(int argc, char* argv[])
 
 #pragma region Setup_Lights
 
-
 		ImGui::Begin("Light settings");
 
 		const int numPointLights = 4;
@@ -405,8 +228,7 @@ int main(int argc, char* argv[])
 			lightProgram.SetMat4(model, "Model");
 			lightProgram.setVec3(lightColor, "LightCol");
 
-			glBindVertexArray(lightVAO);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+			cube.Draw(lightProgram);
 
 			defaultProgram.use();
 
@@ -427,7 +249,6 @@ int main(int argc, char* argv[])
 				ImGui::ColorEdit3("Color", &pointLightColor[i][0]);
 				ImGui::TreePop();
 			}
-
 		}
 
 		glm::vec3 directionalLightDir = cam.Matrix() * glm::normalize(glm::vec4(directionalLightDirection[0], directionalLightDirection[1], directionalLightDirection[2], 0.0f));
@@ -469,42 +290,22 @@ int main(int argc, char* argv[])
 #pragma endregion
 
 #pragma region drawMeshes
+
 		defaultProgram.SetMat4(cam.ProjectionMatrix(), "Projection");
 		defaultProgram.SetMat4(cam.Matrix(), "View");
 
-		for (int i = 0; i < 13; i++)
-		{
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, cubePositions[i]);
-			
-			model = glm::rotate(model, (float)totalElapsedTimeByMoveDelta * glm::radians(5.0f * i + 5.5f), glm::vec3(1.0f, .3f, 0.5f));
+		glm::mat4 bp = glm::mat4(1.0f);
+		glm::mat4 bpNormal = glm::transpose(glm::inverse(bp));
+		bp = glm::scale(bp, glm::vec3(.01f));
 
-			glm::mat4 normal = glm::transpose(glm::inverse(model));
-			defaultProgram.SetMat4(normal, "Normal");
-			defaultProgram.SetMat4(model, "Model");
+		defaultProgram.SetMat4(bpNormal, "Normal");
+		defaultProgram.SetMat4(bp, "Model");
 
-			glEnable(GL_FRAMEBUFFER_SRGB);
-
-			glBindVertexArray(VAO);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
-
-		glm::mat4 floorModel = glm::mat4(1.0f);
-		floorModel = glm::translate(floorModel, glm::vec3(0, -55.0f, 0));
-		floorModel = glm::scale(floorModel, glm::vec3(100.0f));
-
-		glm::mat4 normal = glm::transpose(glm::inverse(floorModel));
-		defaultProgram.SetMat4(normal, "Normal");
-		defaultProgram.SetMat4(floorModel, "Model");
-		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		sponza.Draw(defaultProgram);
 
 #pragma endregion
 
 #pragma region ImGui
-
-
-
 
 		if (ImGui::TreeNode("Lights.DirectionalLight"))
 		{

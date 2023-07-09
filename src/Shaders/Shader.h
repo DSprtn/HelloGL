@@ -1,8 +1,7 @@
-#ifndef SHADER_H
-#define SHADER_H
+#pragma once
 
 #include <string>
-#include <glad.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <fstream>
@@ -12,9 +11,10 @@
 #include <filesystem>
 #include <exception>
 
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
+#include <glm/glm.hpp>
+
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 class Shader
 {
@@ -28,37 +28,42 @@ public:
 		CompileProgram(vertSourcePath, fragSourcePath);
 	}
 
-	void Shader::Reload()
+	void Reload()
 	{
 		CompileProgram(vertPath, fragPath);
 	}
 
-	void Shader::SetMat4(const glm::mat4& mat4, const std::string& prop)
+	void SetMat4(const glm::mat4& mat4, const std::string& prop)
 	{
 		glUniformMatrix4fv(glGetUniformLocation(programID, prop.c_str()), 1, GL_FALSE, glm::value_ptr(mat4));
 	}
 
-	void Shader::setVec3(glm::vec3& vec, const std::string& prop)
+	void setVec3(glm::vec3& vec, const std::string& prop)
 	{
 		glUniform3fv(glGetUniformLocation(programID, prop.c_str()), 1, glm::value_ptr(vec));
 	}
 
-	void Shader::setVec4(glm::vec4& vec, const std::string& prop)
+	void setVec3(glm::vec3&& vec, const std::string& prop)
+	{
+		glUniform3fv(glGetUniformLocation(programID, prop.c_str()), 1, glm::value_ptr(vec));
+	}
+
+	void setVec4(glm::vec4& vec, const std::string& prop)
 	{
 		glUniform4fv(glGetUniformLocation(programID, prop.c_str()), 1, glm::value_ptr(vec));
 	}
 
-	void Shader::setFloat(float f, const std::string& prop)
+	void setFloat(float f, const std::string& prop)
 	{
 		glUniform1f(glGetUniformLocation(programID, prop.c_str()), f);
 	}
 
-	void Shader::setUniform1i(int i, const std::string& prop)
+	void setUniform1i(int i, const std::string& prop)
 	{
 		glUniform1i(glGetUniformLocation(programID, prop.c_str()), i);
 	}
 
-	void Shader::use()
+	void use()
 	{
 		glUseProgram(programID);
 	}
@@ -142,5 +147,3 @@ private:
 	std::string fragPath;
 
 };
-
-#endif 

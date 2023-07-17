@@ -53,7 +53,7 @@ uniform Material material;
 
 float attenuate(float dist, float lightRadius)
 {
-	return pow(max(1 - pow((dist/lightRadius),4),0),2);
+	return pow(max(1 - pow((dist/lightRadius),2),0),2);
 }
 
 vec3 getSpotLightContribution(Spotlight light, vec3 normal, vec3 fragPos, vec3 viewDir)
@@ -79,7 +79,7 @@ vec3 getSpotLightContribution(Spotlight light, vec3 normal, vec3 fragPos, vec3 v
 	float intensity = (spotdirToLightDot - light.outerCone) / epsilon;
 	float coneContribution = clamp(intensity, 0.0, 1.0); 
 
-	return vec3(light.intensity) * (clamp(coneContribution,0,1) * attenuation * (diffuse + ambient + specular));
+	return vec3(light.intensity) * (diffuse + ambient + specular) * (clamp(coneContribution,0,1) * attenuation);
 }
 
 vec3 getPointLightContribution(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)

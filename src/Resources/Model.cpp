@@ -187,6 +187,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType 
 			texture.id = LoadTexture(texPath.c_str(), sRGB);
 			texture.type = typeName;
 			texture.path = texPath;
+			texture.drawName = "material." + typeName;
 			textures.push_back(texture);
 
 			CachedTextures[texPath] = texture;

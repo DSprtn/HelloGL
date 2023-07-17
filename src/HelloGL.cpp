@@ -4,13 +4,14 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <chrono>
 #include <math.h>
 #include "HelloGL.h"
-#include "src/Shaders/Shader.h"
+#include "Shaders/Shader.h"
 #include <algorithm>
 #include <numeric>
 #include <array>
@@ -21,7 +22,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-#include "src/Camera.h"
+#include "Camera.h"
 #include <Model.h>
 
 namespace
@@ -166,6 +167,9 @@ int main(int argc, char* argv[])
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_FRAMEBUFFER_SRGB);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glfwSwapInterval(0);
 
 	while (!glfwWindowShouldClose(window))
 	{

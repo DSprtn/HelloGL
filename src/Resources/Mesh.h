@@ -31,6 +31,7 @@ struct Texture {
 	unsigned int id;
 	std::string type;
 	std::string path;
+	std::string drawName;
 };
 
 class Mesh
@@ -56,7 +57,7 @@ public:
 	Mesh(Mesh const& copy) = delete;
 
 	
-	Mesh(Mesh&& m)
+	Mesh(Mesh&& m) noexcept
 	{
 		Swap(m);
 	}

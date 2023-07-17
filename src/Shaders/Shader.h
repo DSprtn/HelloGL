@@ -113,7 +113,7 @@ private:
 	{
 		if (!std::filesystem::exists(sourcePath))
 		{
-			throw std::exception("FILE DOES NOT EXIST");
+			throw std::runtime_error("FILE DOES NOT EXIST");
 		}
 		std::ifstream t(sourcePath);
 
@@ -137,7 +137,7 @@ private:
 			glGetShaderInfoLog(shader, 512, NULL, infoLog);
 			auto info = "ERROR::SHADER::COMPILATION_FAILED\n" + std::string(infoLog);
 			std::cout << info;
-			throw std::exception(info.c_str());
+			throw std::runtime_error(info.c_str());
 		}
 	}
 

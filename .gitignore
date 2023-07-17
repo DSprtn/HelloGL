@@ -9,9 +9,9 @@
 
 [Ii]nc/
 
-#Cmake 
-
 [Oo]ut/
+
+[Bb]uild/
 
 # User-specific files
 *.rsuser
@@ -407,4 +407,3 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /CMakeSettings.json
-

@@ -58,7 +58,7 @@ uniform Material material;
 
 float attenuate(float dist, float lightRange)
 {
-	return pow(max(1 - pow((dist/lightRange),4),0),2);
+	return pow(max(1 - pow((dist/lightRange),2),0),2);
 }
 
 vec3 getSpotLightContribution(Spotlight light, vec3 texDiffuse, vec3 texSpecular, vec3 normal, vec3 viewDir)

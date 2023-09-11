@@ -1,48 +1,61 @@
 {
-    "version": 3,
-    "vendor": {
-        "conan": {}
+  "version": 3,
+  "vendor": {
+    "conan": {}
+  },
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 15,
+    "patch": 0
+  },
+
+  "configurePresets": [
+    {
+      "name": "windows-base",
+      "hidden": true,
+      "description": "Sets generator, compilers, x64 architecture, build and install directory, debug build type",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+        "CMAKE_POLICY_DEFAULT_CMP0091": "NEW"
+      },
+      "toolchainFile": "${sourceDir}/build/${presetName}/conan_toolchain.cmake"
     },
-    "cmakeMinimumRequired": {
-        "major": 3,
-        "minor": 15,
-        "patch": 0
+    {
+      "name": "debug",
+      "displayName": "debug",
+      "description": "Target Windows (64-bit) with the Visual Studio development environment. (Debug)",
+      "inherits": "windows-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
     },
-    "configurePresets": [
-        {
-            "name": "conan-default",
-            "displayName": "'conan-default' config",
-            "description": "'conan-default' configure using 'Visual Studio 17 2022' generator",
-            "generator": "Visual Studio 17 2022",
-            "cacheVariables": {
-                "CMAKE_POLICY_DEFAULT_CMP0091": "NEW"
-            },
-            "toolchainFile": "C:\\Users\\SkyNET\\source\\repos\\DSprtn\\HelloGL\\out\\conan_toolchain.cmake",
-            "binaryDir": "C:\\Users\\SkyNET\\source\\repos\\DSprtn\\HelloGL\\out"
-        }
-    ],
-    "buildPresets": [
-        {
-            "name": "conan-debug",
-            "configurePreset": "conan-default",
-            "configuration": "Debug"
-        },
-        {
-            "name": "conan-release",
-            "configurePreset": "conan-default",
-            "configuration": "Release"
-        }
-    ],
-    "testPresets": [
-        {
-            "name": "conan-debug",
-            "configurePreset": "conan-default",
-            "configuration": "Debug"
-        },
-        {
-            "name": "conan-release",
-            "configurePreset": "conan-default",
-            "configuration": "Release"
-        }
-    ]
+    {
+      "name": "release",
+      "displayName": "release",
+      "description": "Target Windows (64-bit) with the Visual Studio development environment. (RelWithDebInfo)",
+      "inherits": "windows-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "build-debug",
+      "displayName": "Debug",
+      "description": "Custom build preset description",
+      "configurePreset": "debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "build-release",
+      "displayName": "Release",
+      "description": "Custom build preset description",
+      "configurePreset": "release",
+      "configuration": "Release"
+    }
+  ]
 }

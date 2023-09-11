@@ -8,14 +8,12 @@
 #includes 
 
 [Ii]nc/
-[Ii]nclude/assimp
-
-CMakeUserPresets.json
-CMakePresets.json
-
-#Cmake 
 
 [Oo]ut/
+
+[Bb]uild/
+
+[Ii]nclude/assimp
 
 # User-specific files
 *.rsuser
@@ -411,6 +409,3 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /CMakeSettings.json
-
-/CMakePresets.json
-/CMakeUserPresets.json

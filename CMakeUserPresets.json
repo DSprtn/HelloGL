@@ -1,9 +1,1 @@
-{
-    "version": 4,
-    "vendor": {
-        "conan": {}
-    },
-    "include": [
-        "C:\\Users\\SkyNET\\source\\repos\\DSprtn\\HelloGL\\CMakePresets.json"
-    ]
-}
+# Dummy file

@@ -11,11 +11,11 @@ void Mesh::SetupMesh()
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-  glBufferData(GL_ARRAY_BUFFER, Vertices.size() * sizeof(Vertex), &Vertices[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, Vertices.size() * sizeof(Vertex), Vertices.data(), GL_STATIC_DRAW);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, Indices.size() * sizeof(unsigned int),
-    &Indices[0], GL_STATIC_DRAW);
+    Indices.data(), GL_STATIC_DRAW);
 
   // vertex positions
   glEnableVertexAttribArray(0);
@@ -39,10 +39,7 @@ void Mesh::Draw(Shader& shader)
   {
     glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
     // retrieve texture number (the N in diffuse_textureN)
-    std::string number;
-    std::string name = Textures[i].type;
-
-    shader.setUniform1i(i,("material." + name).c_str());
+    shader.setUniform1i(i,Textures[i].drawName);
     glBindTexture(GL_TEXTURE_2D, Textures[i].id);
   }
   glActiveTexture(GL_TEXTURE0);

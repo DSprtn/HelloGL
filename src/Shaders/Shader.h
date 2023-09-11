@@ -16,6 +16,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+namespace
+{
+	static char const * const searchpaths[2] = {"./", "./Shaders/"};
+	static char const * const includeShader[1] = {"/Shaders/common.glsl"};
+	static bool gotCommon = false;
+}
+
 class Shader
 {
 
@@ -126,7 +133,14 @@ private:
 
 		glShaderSource(shader, 1, &sourceChar, NULL);
 
-		glCompileShader(shader);
+		for (const auto& path : includeShader)
+		{
+			std::string p(path);
+			glNamedStringARB(GL_SHADER_INCLUDE_ARB, p.length(), path, source.length(), source.c_str());
+		}
+
+		glCompileShaderIncludeARB(shader, 1, includeShader, nullptr);
+		
 
 		int  success;
 		char infoLog[512];
@@ -139,6 +153,7 @@ private:
 			std::cout << info;
 			throw std::runtime_error(info.c_str());
 		}
+		
 	}
 
 	unsigned int programID;

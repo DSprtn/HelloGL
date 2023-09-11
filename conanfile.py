@@ -29,15 +29,11 @@ class HelloGLRecipe(ConanFile):
 		self.requires("glm/0.9.9.8")
 		self.requires("glad/0.1.36")
 
-
-		self.default_options = "glad/0.1.36:gl_profile=core", "glad/0.1.36:spec=gl", "glad/0.1.36:gl_version=4.6", "glad/0.1.36:spec=gl", "glad/0.1.36:no_loader=False", "assimp/5.2.2:shared=False"
+		self.default_options = "assimp/5.2.2:shared=False"
 
 
 	def build_requirements(self):
 		self.tool_requires("cmake/3.26.4")
-
-	#def layout(self):
-		#cmake_layout(self)
 
 	def generate(self):
 		deps = CMakeDeps(self)
@@ -53,6 +49,13 @@ class HelloGLRecipe(ConanFile):
 	def package(self):
 		cmake = CMake(self)
 		cmake.install()
+
+	def configure(self):
+		self.options["glad/*"].gl_version="4.6"
+		self.options["glad/*"].gl_profile="core"
+		self.options["glad/*"].spec="gl"
+		self.options["glad/*"].no_loader="False"
+		self.options["glad/*"].extensions="GL_ARB_shading_language_include"
 
 
 

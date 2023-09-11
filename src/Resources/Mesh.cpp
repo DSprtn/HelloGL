@@ -26,27 +26,21 @@ void Mesh::SetupMesh()
   // vertex texture coords
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
+  // vertex tangents
+  glEnableVertexAttribArray(3);
+  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Tangent));
 
   glBindVertexArray(0);
 }
 
 void Mesh::Draw(Shader& shader)
 {
-  unsigned int diffuseNr = 1;
-  unsigned int specularNr = 1;
-  unsigned int emissiveNr = 1;
   for (unsigned int i = 0; i < Textures.size(); i++)
   {
     glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
     // retrieve texture number (the N in diffuse_textureN)
     std::string number;
     std::string name = Textures[i].type;
-    if (name == "diffuse")
-      number = std::to_string(diffuseNr++);
-    else if (name == "specular")
-      number = std::to_string(specularNr++);
-    else if (name == "emissive")
-      number = std::to_string(emissiveNr++);
 
     shader.setUniform1i(i,("material." + name).c_str());
     glBindTexture(GL_TEXTURE_2D, Textures[i].id);

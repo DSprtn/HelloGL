@@ -13,7 +13,7 @@ target_sources(HelloGL
 
 add_subdirectory(Resources)
 add_subdirectory(Shaders)
-add_subdirectory(Core)
+#add_subdirectory(Core)
 
 target_include_directories(HelloGL PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/Shaders/)
 target_include_directories(HelloGL PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/Resources/)

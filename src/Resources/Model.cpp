@@ -80,6 +80,7 @@ void Model::LoadModel(const std::filesystem::path& path)
 		aiProcess_CalcTangentSpace |
 		aiProcess_Triangulate |
 		aiProcess_JoinIdenticalVertices |
+		aiProcess_CalcTangentSpace |
 		aiProcess_SortByPType |
 		aiProcess_FlipUVs |
 		aiProcess_GenNormals);
@@ -119,6 +120,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 		// process vertex positions, normals and texture coordinates
 		const aiVector3D& pos = mesh->mVertices[i];
 		const aiVector3D& normal = mesh->mNormals[i];
+		const aiVector3D& tangent = mesh->mTangents[i];
 		
 		float u = 0.0f, v = 0.0f;
 		if (mesh->HasTextureCoords(0))
@@ -128,7 +130,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 			v = UV.y;
 		}
 
-		m.Vertices.emplace_back(Vertex(pos.x, pos.y, pos.z, normal.x, normal.y, normal.z, u, v));
+		m.Vertices.emplace_back(Vertex(pos.x, pos.y, pos.z, normal.x, normal.y, normal.z, u, v, tangent.x, tangent.y, tangent.z));
 	}
 	
 	for (unsigned int i = 0; i < mesh->mNumFaces; i++)
@@ -146,6 +148,10 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 		std::vector<Texture> diffuseMaps = loadMaterialTextures(material,
 			aiTextureType_DIFFUSE, "diffuse");
 		m.Textures.insert(m.Textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+
+		std::vector<Texture> normalMaps = loadMaterialTextures(material,
+			aiTextureType_DISPLACEMENT, "normal");
+		m.Textures.insert(m.Textures.end(), normalMaps.begin(), normalMaps.end());
 
 		std::vector<Texture> specularMaps = loadMaterialTextures(material,
 			aiTextureType_SPECULAR, "specular");
@@ -170,7 +176,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType 
 		mat->GetTexture(type, i, &str);
 
 		bool sRGB = true;
-		if (type == aiTextureType_NORMALS)
+		if (type == aiTextureType_NORMALS || type == aiTextureType_DISPLACEMENT)
 		{
 			sRGB = false;
 		}

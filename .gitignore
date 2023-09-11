@@ -8,6 +8,10 @@
 #includes 
 
 [Ii]nc/
+[Ii]nclude/assimp
+
+CMakeUserPresets.json
+CMakePresets.json
 
 #Cmake 
 
@@ -408,3 +412,5 @@ FodyWeavers.xsd
 *.sln.iml
 /CMakeSettings.json
 
+/CMakePresets.json
+/CMakeUserPresets.json

@@ -8,23 +8,18 @@
 struct Vertex
 {
 
-	Vertex(float posX, float posY, float posZ, float normX, float normY, float normZ, float texU, float texV)
+	Vertex(float posX, float posY, float posZ, float normX, float normY, float normZ, float texU, float texV, float tangX, float tangY, float tangZ)
 	{
 		Position = glm::vec3(posX, posY, posZ);
 		Normal = glm::vec3(normX, normY, normZ);
 		TexCoords = glm::vec2(texU, texV);
-	}
-
-	Vertex(float posX, float posY, float posZ, float texU, float texV)
-	{
-		Position = glm::vec3(posX, posY, posZ);
-		Normal = glm::vec3();
-		TexCoords = glm::vec2(texU, texV);
+		Tangent = glm::vec3(tangX, tangY, tangZ);
 	}
 
 	glm::vec3 Position;
 	glm::vec3 Normal;
 	glm::vec2 TexCoords;
+	glm::vec3 Tangent;
 };
 
 struct Texture {
@@ -56,12 +51,10 @@ public:
 	Mesh(Mesh const& copy) = delete;
 
 	
-	Mesh(Mesh&& m)
+	Mesh(Mesh&& m) noexcept
 	{
 		Swap(m);
 	}
-
-
 
 	void SetupMesh();
 

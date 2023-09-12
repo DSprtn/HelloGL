@@ -55,7 +55,6 @@ class HelloGLRecipe(ConanFile):
 		self.options["glad/*"].gl_profile="core"
 		self.options["glad/*"].spec="gl"
 		self.options["glad/*"].no_loader="False"
-		self.options["glad/*"].extensions="GL_ARB_shading_language_include"
 
 
 

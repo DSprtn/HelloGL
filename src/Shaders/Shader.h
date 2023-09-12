@@ -15,13 +15,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
-namespace
-{
-	static char const * const searchpaths[2] = {"./", "./Shaders/"};
-	static char const * const includeShader[1] = {"/Shaders/common.glsl"};
-	static bool gotCommon = false;
-}
+#include <unordered_set>
 
 class Shader
 {
@@ -116,31 +110,57 @@ private:
 		
 	}
 
-	void CompileShader(const std::string& sourcePath, const unsigned int shader)
+	std::string GetShaderSource(const std::string& path)
 	{
-		if (!std::filesystem::exists(sourcePath))
+		if (!std::filesystem::exists(path))
 		{
 			throw std::runtime_error("FILE DOES NOT EXIST");
 		}
-		std::ifstream t(sourcePath);
 
-		t.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+		std::unordered_set<std::string> includedHeaders;
 
-		std::stringstream buffer;
-		buffer << t.rdbuf();
-		std::string source = buffer.str();
+
+		std::ostringstream buffer;
+
+		std::ifstream file(path);
+		if (file.is_open()) {
+			std::string line;
+			while (std::getline(file, line)) {
+
+				if (line.starts_with("#include"))
+				{
+					std::string incl = line.substr(9);
+					std::erase(incl, '"');
+					std::string nextPath = "Shaders/" + incl;
+
+
+					if (!includedHeaders.contains(nextPath))
+					{
+						includedHeaders.insert(nextPath);
+
+						std::string nextSource = GetShaderSource(nextPath);
+						buffer << nextSource << std::endl;
+					}
+
+				}
+				else
+				{
+					buffer << line << std::endl;
+				}
+			}
+			file.close();
+		}
+		
+		return buffer.str();
+	}
+
+	void CompileShader(const std::string& sourcePath, const unsigned int shader)
+	{
+		const std::string source = GetShaderSource(sourcePath);
 		const char* sourceChar = source.c_str();
 
 		glShaderSource(shader, 1, &sourceChar, NULL);
-
-		for (const auto& path : includeShader)
-		{
-			std::string p(path);
-			glNamedStringARB(GL_SHADER_INCLUDE_ARB, p.length(), path, source.length(), source.c_str());
-		}
-
-		glCompileShaderIncludeARB(shader, 1, includeShader, nullptr);
-		
+		glCompileShader(shader);
 
 		int  success;
 		char infoLog[512];
@@ -149,11 +169,10 @@ private:
 		if (!success)
 		{
 			glGetShaderInfoLog(shader, 512, NULL, infoLog);
-			auto info = "ERROR::SHADER::COMPILATION_FAILED\n" + std::string(infoLog);
+			auto info = "ERROR - COMPILATION FAILED\n" + std::string(infoLog);
 			std::cout << info;
 			throw std::runtime_error(info.c_str());
 		}
-		
 	}
 
 	unsigned int programID;

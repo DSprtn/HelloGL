@@ -1,6 +1,5 @@
 #version 330 core
-#extension GL_ARB_shading_language_include : require
-#include "/Shaders/common.glsl"
+#include "common.glsl"
 
 out vec4 FragColor;
 
@@ -11,20 +10,7 @@ in VS_OUT {
 	vec3 worldPos;
 	vec4 viewSpacePos;
 	mat3 TBN;
-} fs_in;  
-
-uniform vec4 globalCol;
-
-struct Material {
-    sampler2D diffuse;
-    sampler2D specular;
-	sampler2D emissive;
-	sampler2D normal;
-    float shininess;
-}; 
-  
-uniform Material material;
-
+} fs_in;
 
 float attenuate(float dist, float lightRange)
 {

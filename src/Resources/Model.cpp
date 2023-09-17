@@ -153,6 +153,10 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 			aiTextureType_DISPLACEMENT, "normal");
 		m.Textures.insert(m.Textures.end(), normalMaps.begin(), normalMaps.end());
 
+		normalMaps = loadMaterialTextures(material,
+			aiTextureType_NORMALS, "normal");
+		m.Textures.insert(m.Textures.end(), normalMaps.begin(), normalMaps.end());
+
 		std::vector<Texture> specularMaps = loadMaterialTextures(material,
 			aiTextureType_SPECULAR, "specular");
 		m.Textures.insert(m.Textures.end(), specularMaps.begin(), specularMaps.end());

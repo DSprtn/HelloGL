@@ -131,15 +131,13 @@ private:
 				{
 					std::string incl = line.substr(9);
 					std::erase(incl, '"');
-					std::string nextPath = "Shaders/" + incl;
-
+					const std::string nextPath = "Shaders/" + incl;
 
 					if (!includedHeaders.contains(nextPath))
 					{
 						includedHeaders.insert(nextPath);
 
-						std::string nextSource = GetShaderSource(nextPath);
-						buffer << nextSource << std::endl;
+						buffer << std::move(GetShaderSource(nextPath)) << std::endl;
 					}
 
 				}
@@ -158,6 +156,8 @@ private:
 	{
 		const std::string source = GetShaderSource(sourcePath);
 		const char* sourceChar = source.c_str();
+
+		std::cout << "Compiling shader... " << std::endl << source;
 
 		glShaderSource(shader, 1, &sourceChar, NULL);
 		glCompileShader(shader);

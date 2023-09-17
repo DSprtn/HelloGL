@@ -22,6 +22,9 @@ add_subdirectory(src)
 add_subdirectory(Shaders)
 add_subdirectory(include/imgui)
 
+
+# Copy files on build 
+
 add_custom_command(TARGET HelloGL PRE_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy_directory
                        ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:HelloGL>/assets)
@@ -29,6 +32,13 @@ add_custom_command(TARGET HelloGL PRE_BUILD
 add_custom_command(TARGET HelloGL PRE_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy_directory
                        ${CMAKE_SOURCE_DIR}/shaders $<TARGET_FILE_DIR:HelloGL>/shaders)
+
+# Copy shaders on config for hot reloading
+
+foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
+    string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
+    file(COPY ${CMAKE_SOURCE_DIR}/shaders DESTINATION ${CMAKE_BINARY_DIR}/${OUTPUTCONFIG})
+endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
 
 target_include_directories(HelloGL PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 target_include_directories(HelloGL PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/Shaders/)

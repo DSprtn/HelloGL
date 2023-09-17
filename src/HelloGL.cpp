@@ -180,9 +180,6 @@ int main(int argc, char* argv[])
 			shouldReloadShaders = false;
 
 			glUseProgram(defaultProgram);
-			defaultProgram.setUniform1i(0, "material.diffuse");
-			defaultProgram.setUniform1i(1, "material.specular");
-			defaultProgram.setUniform1i(2, "material.emissive");
 		}
 
 
@@ -307,6 +304,12 @@ int main(int argc, char* argv[])
 
 		sponza.Draw(defaultProgram);
 
+
+		glm::mat4 cubeMat = glm::mat4(1.0f);
+		cubeMat = glm::translate(cubeMat, glm::vec3(0, 1, 0));
+		defaultProgram.SetMat4(cubeMat, "Model");
+		cube.Draw(defaultProgram);
+
 #pragma endregion
 
 #pragma region ImGui
@@ -347,7 +350,7 @@ int main(int argc, char* argv[])
 
 		auto str = "FPS: " + std::to_string(1 / avg);
 		ImGui::Text(str.c_str());
-		ImGui::SliderFloat("Delta time", &moveDeltatimeMultiplier, 0.0f, 20.0f);
+		ImGui::SliderFloat("Timescale", &moveDeltatimeMultiplier, 0.0f, 20.0f);
 		ImGui::End();
 
 		ImGui::Render();

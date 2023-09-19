@@ -143,8 +143,8 @@ int main(int argc, char* argv[])
 	float spotLightInnerCone = 12.5f;
 	float spotLightOuterCone = 25.0f;
 	float spotLightRange = 5.0f;
-	float spotLightDirection[3]{ 0.0f, -1.0f, 0.5f };
-	float spotLightPosition[3]{ 0.0f, 3.0f, 0.0f };
+	float spotLightDirection[3]{ -0.3f, 0.3f, 0.56f };
+	float spotLightPosition[3]{ -12.1f, 0.3f, 0.56f };
 	float spotLightColor[3]{ 0.9, 0.1, 0.1 };
 	float spotLightIntensity = 1.0f;
 	bool  spotLightMountToHead = false;

@@ -24,7 +24,7 @@ public:
 
 	glm::mat4 Matrix()
 	{
-		return m_matrix;
+		return glm::inverse(m_matrix);
 	}
 
 	void IgnoreNextUpdate()

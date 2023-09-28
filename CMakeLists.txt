@@ -41,6 +41,5 @@ foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
 endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
 
 target_include_directories(HelloGL PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/)
-target_include_directories(HelloGL PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/Shaders/)
-target_include_directories(HelloGL PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/Resources/)
 target_include_directories(HelloGL PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/imgui/)
+

@@ -1,11 +1,10 @@
 #pragma once
-#include <Vector.h>
-#include <Component.h>
+#include "Component.h"
 #include <string>
 #include <typeinfo>
 #include <iostream>
 #include <unordered_set>
-#include <Transform.h>
+#include "Transform.h"
 
 class Component;
 class Transform;
@@ -13,7 +12,7 @@ class Transform;
 class Entity
 {
 public:
-	Entity(std::string Name, int sizeX, int sizeY);
+
 	Entity(std::string Name);
 	virtual ~Entity();
 
@@ -23,7 +22,6 @@ public:
 	std::string Name;
 
 	std::vector<Component*> Components;
-	std::unordered_set<std::string> Tags;
 
 	virtual void Start();
 	virtual void Update();
@@ -34,7 +32,7 @@ public:
 	template<typename T>
 	T* GetComponent()
 	{
-		for (int i = 0; i < Components.Count; i++) {
+		for (int i = 0; i < Components.size(); i++) {
 			Component* c = Components[i];
 			if (typeid(T).name() == typeid(*c).name()) {
 				return static_cast<T*>(c);
@@ -46,7 +44,7 @@ public:
 	template <typename T, class... Args>
 	T* AddComponent(Args&&... args) {
 		T* component(new T(this, std::forward<Args>(args)...));
-		Components.Add(component);
+		Components.emplace_back(component);
 		return component;
 	}
 

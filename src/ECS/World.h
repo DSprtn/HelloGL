@@ -8,7 +8,7 @@ public:
 	World() = default;
 	~World();
 
-	std::vector<Entity*> Entities;
+	std::vector<std::unique_ptr<Entity>> Entities;
 
 	void Update();
 	void LateUpdate();

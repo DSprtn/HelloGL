@@ -1,12 +1,21 @@
-class Renderer
+#include <Component.h>
+#include <Model.h>
+
+class Renderer : Component
 {
 public:
-	public Renderer(std::string ModelPath);
+	Renderer(Entity* owner, std::string modelPath, Shader* shader) : model{ modelPath }, Component(owner)
+	{
+		Shader = shader;
+	}
 
-	Draw();
-	LoadMesh();
+	void Draw();
 
 private:
 	Model model;
+	Shader* Shader;
+
+	// Inherited via Component
+	virtual void Start() override;
 
 };

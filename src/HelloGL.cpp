@@ -21,9 +21,13 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
+
 #include <stb_image.h>
 #include "Camera.h"
+
 #include <Model.h>
+#include <Entity.h>
+#include <Renderer.h>
 
 namespace
 {
@@ -159,10 +163,15 @@ int main(int argc, char* argv[])
 
 	Camera cam(window);
 
+
+
 	Shader defaultProgram = Shader("Shaders/Technicolor.vert", "Shaders/Technicolor.frag");
 	Shader lightProgram = Shader("Shaders/Light.vert", "Shaders/Light.frag");
 
-	Model cube("assets/model/cube/cube.obj");
+	Entity cubeEntity("Cube");
+	cubeEntity.AddComponent<Renderer>("assets/model/cube/cube.obj", &defaultProgram);
+
+	Model cube("");
 	Model sponza("assets/model/sponza/sponza.obj");
 
 	glEnable(GL_DEPTH_TEST);

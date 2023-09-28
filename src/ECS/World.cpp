@@ -10,18 +10,19 @@ void World::Update()
 	CleanupDeletedEntities();
 	AddInstantiatedEntities();
 
-	for (int i = 0; i < Entities.Count; i++) {
-		Entities[i].Update();
+
+	for (int i = 0; i < Entities.size(); i++) {
+		Entities[i]->Update();
 	}
 }
 
 void World::AddInstantiatedEntities()
 {
-	for (int i = 0; i < Entities.Count; i++) {
-		if (!Entities[i].Instantiated)
+	for (int i = 0; i < Entities.size(); i++) {
+		if (!Entities[i]->Instantiated)
 		{
-			Entities[i].Instantiated = true;
-			Entities[i].Start();
+			Entities[i]->Instantiated = true;
+			Entities[i]->Start();
 		}
 
 	}
@@ -29,20 +30,15 @@ void World::AddInstantiatedEntities()
 
 void World::CleanupDeletedEntities()
 {
-	for (int i = 0; i < Entities.Count; i++) {
-		if (Entities[i].MarkedForDeletion) {\
-			Entities.EraseAt(i);
-			i--;
-		}
-	}
+	Entities.erase(std::remove_if(std::begin(Entities), std::end(Entities), [](std::unique_ptr<Entity>& e) { return (e->MarkedForDeletion); }), Entities.end());
 }
 
 void World::LateUpdate()
 {
-	for (int i = 0; i < Entities.Count; i++) {
-		if (Entities[i].Instantiated)
+	for (int i = 0; i < Entities.size(); i++) {
+		if (Entities[i]->Instantiated)
 		{
-			Entities[i].LateUpdate();
+			Entities[i]->LateUpdate();
 		}
 
 	}
@@ -50,15 +46,15 @@ void World::LateUpdate()
 
 void World::OnRender()
 {
-	for (int i = 0; i < Entities.Count; i++) {
-		if (Entities[i].Instantiated)
+	for (int i = 0; i < Entities.size(); i++) {
+		if (Entities[i]->Instantiated)
 		{
-			Entities[i].OnRender();
+			Entities[i]->OnRender();
 		}
 	}
 }
 
 void World::ClearAllEntities()
 {
-	Entities.Clear();
+	Entities.clear();
 }

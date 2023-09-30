@@ -1,19 +1,18 @@
 #include <Component.h>
 #include <Model.h>
+#include <Shader.h>
 
-class Renderer : Component
+class Renderer : public Component
 {
 public:
-	Renderer(Entity* owner, std::string modelPath, Shader* shader) : model{ modelPath }, Component(owner)
+	Renderer(Entity* owner, std::string modelPath) : model{ modelPath }, Component(owner)
 	{
-		Shader = shader;
 	}
 
-	void Draw();
+	void Draw(Shader& shader);
 
 private:
 	Model model;
-	Shader* Shader;
 
 	// Inherited via Component
 	virtual void Start() override;

@@ -21,6 +21,8 @@ public:
 
 	std::string Name;
 
+	Transform Transform;
+
 	std::vector<Component*> Components;
 
 	virtual void Start();
@@ -48,7 +50,6 @@ public:
 		return component;
 	}
 
-	Transform Transform;
 
 private:
 

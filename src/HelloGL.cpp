@@ -169,9 +169,10 @@ int main(int argc, char* argv[])
 	Shader lightProgram = Shader("Shaders/Light.vert", "Shaders/Light.frag");
 
 	Entity cubeEntity("Cube");
-	cubeEntity.AddComponent<Renderer>("assets/model/cube/cube.obj", &defaultProgram);
+	cubeEntity.Transform.Position += glm::vec3(0, 1, 0);
+	auto cubeRenderer = cubeEntity.AddComponent<Renderer>("assets/model/cube/cube.obj");
 
-	Model cube("");
+	//Model cube("");
 	Model sponza("assets/model/sponza/sponza.obj");
 
 	glEnable(GL_DEPTH_TEST);
@@ -238,7 +239,7 @@ int main(int argc, char* argv[])
 			lightProgram.SetMat4(model, "Model");
 			lightProgram.setVec3(lightColor, "LightCol");
 
-			cube.Draw(lightProgram);
+			cubeRenderer->Draw(lightProgram);
 
 			defaultProgram.use();
 
@@ -313,11 +314,8 @@ int main(int argc, char* argv[])
 
 		sponza.Draw(defaultProgram);
 
-
-		glm::mat4 cubeMat = glm::mat4(1.0f);
-		cubeMat = glm::translate(cubeMat, glm::vec3(0, 1, 0));
-		defaultProgram.SetMat4(cubeMat, "Model");
-		cube.Draw(defaultProgram);
+		
+		cubeRenderer->Draw(defaultProgram);
 
 #pragma endregion
 

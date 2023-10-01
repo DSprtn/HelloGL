@@ -1,10 +1,11 @@
 #pragma once
-#include "Component.h"
+
 #include <string>
 #include <typeinfo>
 #include <iostream>
 #include <unordered_set>
 #include "Transform.h"
+#include "Component.h"
 
 class Component;
 class Transform;
@@ -21,9 +22,9 @@ public:
 
 	std::string Name;
 
-	Transform Transform;
-
 	std::vector<Component*> Components;
+	
+	Transform* Transform;
 
 	virtual void Start();
 	virtual void Update();

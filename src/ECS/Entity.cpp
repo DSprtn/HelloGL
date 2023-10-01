@@ -1,4 +1,5 @@
 #include "Entity.h"
+#include <imgui.h>
 #include <iostream>
 
 Entity::Entity(std::string name)
@@ -6,6 +7,7 @@ Entity::Entity(std::string name)
 	Name = name;
 	MarkedForDeletion = false;
 	Instantiated = false;
+	Transform = this->AddComponent<class Transform>();
 }
 
 Entity::~Entity()

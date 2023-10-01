@@ -28,6 +28,7 @@
 #include <Model.h>
 #include <Entity.h>
 #include <Renderer.h>
+#include <World.h>
 
 namespace
 {
@@ -163,17 +164,28 @@ int main(int argc, char* argv[])
 
 	Camera cam(window);
 
-
-
 	Shader defaultProgram = Shader("Shaders/Technicolor.vert", "Shaders/Technicolor.frag");
 	Shader lightProgram = Shader("Shaders/Light.vert", "Shaders/Light.frag");
 
-	Entity cubeEntity("Cube");
-	cubeEntity.Transform.Position += glm::vec3(0, 1, 0);
-	auto cubeRenderer = cubeEntity.AddComponent<Renderer>("assets/model/cube/cube.obj");
 
-	//Model cube("");
-	Model sponza("assets/model/sponza/sponza.obj");
+#pragma region CreateScene
+	World world;
+
+
+	auto createEntityWithModel = [&](std::string name, std::string model, Shader* shader)
+	{
+		auto e = world.CreateEntity<Entity>(name);
+		e->AddComponent<Renderer>(model, shader);
+		return e;
+	};
+
+	auto cube = createEntityWithModel("Cube", "assets/model/cube/cube.obj", &defaultProgram);
+	auto sponza = createEntityWithModel("Sponza", "assets/model/sponza/sponza.obj", &defaultProgram);
+
+	cube->Transform->SetPosition(glm::vec3(0, 1, 0));
+	sponza->Transform->SetScale(glm::vec3(0.01f));
+
+#pragma endregion
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_FRAMEBUFFER_SRGB);
@@ -239,7 +251,7 @@ int main(int argc, char* argv[])
 			lightProgram.SetMat4(model, "Model");
 			lightProgram.setVec3(lightColor, "LightCol");
 
-			cubeRenderer->Draw(lightProgram);
+
 
 			defaultProgram.use();
 
@@ -297,27 +309,12 @@ int main(int argc, char* argv[])
 		glm::vec4 globalCol = glm::vec4(1 + static_cast<float>(sin(totalElapsedTimeByMoveDelta * 2)), 0.0f, 0.0f, uniformAlpha);
 
 		defaultProgram.setVec4(globalCol, "globalCol");
-
-#pragma endregion
-
-#pragma region drawMeshes
-
 		defaultProgram.SetMat4(cam.ProjectionMatrix(), "Projection");
 		defaultProgram.SetMat4(cam.Matrix(), "View");
 
-		glm::mat4 bp = glm::mat4(1.0f);
-		glm::mat4 bpNormal = glm::transpose(glm::inverse(bp));
-		bp = glm::scale(bp, glm::vec3(.01f));
-
-		defaultProgram.SetMat4(bpNormal, "Normal");
-		defaultProgram.SetMat4(bp, "Model");
-
-		sponza.Draw(defaultProgram);
-
-		
-		cubeRenderer->Draw(defaultProgram);
-
 #pragma endregion
+
+		world.Update();
 
 #pragma region ImGui
 
@@ -342,6 +339,7 @@ int main(int argc, char* argv[])
 			ImGui::TreePop();
 		}
 		ImGui::End();
+
 		ImGui::Begin("Simulation");
 		
 

@@ -8,7 +8,8 @@ public:
 	World() = default;
 	~World();
 
-	std::vector<std::unique_ptr<Entity>> Entities;
+	std::vector<Entity*> Entities;
+	std::vector<Entity*> InstantiatedEntities;
 
 	void Update();
 	void LateUpdate();
@@ -17,7 +18,9 @@ public:
 
 	template <typename T, class... Args>
 	T* CreateEntity(Args&&... args) {
-		return & (Entities.emplace_back(std::forward<Args>(args)...));
+		T* entity(new T(std::forward<Args>(args)...));
+		InstantiatedEntities.push_back(entity);
+		return entity;
 	}
 
 private:

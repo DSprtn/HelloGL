@@ -4,7 +4,6 @@
 
 namespace
 {
-
 	unsigned int LoadTexture(char const* path, bool sRGB = false)
 	{
 		unsigned int textureID;

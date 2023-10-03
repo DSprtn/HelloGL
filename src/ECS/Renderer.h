@@ -25,4 +25,5 @@ private:
 	virtual void Start() override;
 
 	virtual void Update() override;
+	virtual void OnRender() override;
 };

@@ -2,6 +2,7 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_float.hpp>
 #include <imgui.h>
+#include <glm/gtc/quaternion.hpp>
 
 Transform::Transform(Entity* owner) : Component(owner)
 {
@@ -15,21 +16,33 @@ Transform::Transform(Entity* owner) : Component(owner)
 
 void Transform::UpdateIMGUI()
 {
-	ImGui::Begin("Scene");
-	ImGui::Begin(m_Owner->Name.c_str());
-	bool changed = false;
+	const auto tName = m_Owner->Name.c_str();
 
-	changed |= ImGui::InputFloat3("Position", &Position[0]);
-	changed |= ImGui::InputFloat3("Rotation", &Rotation[0]);
-	changed |= ImGui::InputFloat3("Scale", &Scale[0]);
-
-	if (changed)
+	Transform* parent = Parent;
+	std::string nodeName;
+	while (parent != nullptr)
 	{
-		worldMatrixDirty = true;
-		localMatrixDirty = true;
+		nodeName = parent->m_Owner->Name + "." + nodeName;
+		parent = parent->Parent;
 	}
+	nodeName += tName;
 
-	ImGui::End();
+	ImGui::Begin("Scene");
+
+	if (ImGui::TreeNode(nodeName.c_str()))
+	{
+		bool changed = false;
+
+		changed |= ImGui::DragFloat3("Position", &Position[0], 0.05f);
+		changed |= ImGui::DragFloat3("Rotation", &Rotation[0], 0.05f);
+		changed |= ImGui::DragFloat3("Scale", &Scale[0],0.05f);
+		ImGui::TreePop();
+		if (changed)
+		{
+			MakeWorldMatrixDirty();
+			localMatrixDirty = true;
+		}
+	}
 	ImGui::End();
 }
 
@@ -39,10 +52,10 @@ glm::mat4 Transform::WorldMatrix()
 	{
 		Transform* p = Parent;
 
-		glm::mat4 curr = CachedLocalMatrix;
+		glm::mat4 curr = LocalMatrix();
 		while (p != nullptr)
 		{
-			curr *= glm::inverse(p->LocalMatrix());
+			curr = p->LocalMatrix() * curr;
 			p = p->Parent;
 		}
 
@@ -57,16 +70,52 @@ glm::mat4 Transform::LocalMatrix()
 {
 	if (localMatrixDirty)
 	{
-		//auto mat = glm::translate(glm::mat4(1.0f), Position);
-		///mat = glm::scale(mat, Scale);
-		//mat *= glm::quat(Rotation);
-		//CachedLocalMatrix = mat;
+		auto mat = glm::translate(glm::mat4(1.0f), Position);
+		mat *= glm::mat4_cast(glm::quat(Rotation));
+		mat = glm::scale(mat, Scale);
+		CachedLocalMatrix = mat;
 		localMatrixDirty = false;
 	}
 
 	return CachedLocalMatrix;
 }
 
+void Transform::ChildAdded(Transform* t)
+{
+	Children.push_back(t);
+}
+
+void Transform::ChildRemoved(Transform* t)
+{
+	Children.erase(std::remove(Children.begin(), Children.end(), t), Children.end());
+}
+
+void Transform::MakeWorldMatrixDirty()
+{
+	worldMatrixDirty = true;
+	for (Transform* child : Children)
+	{
+		child->MakeWorldMatrixDirty();
+	}
+}
+
+Transform* Transform::GetRoot()
+{
+	Transform* root = this;
+	Transform* parent = Parent;
+	while (Parent != nullptr)
+	{
+		root = Parent;
+		parent = root->Parent;
+	}
+	return root;
+}
+
 void Transform::Start()
 {
+}
+
+void Transform::Update()
+{
+	UpdateIMGUI();
 }

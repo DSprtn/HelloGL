@@ -24,5 +24,10 @@ void Renderer::Start()
 
 void Renderer::Update()
 {
+
+}
+
+void Renderer::OnRender()
+{
 	Draw();
 }

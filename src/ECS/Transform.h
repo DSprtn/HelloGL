@@ -25,6 +25,15 @@ public:
 	void SetParent(Transform* parent)
 	{
 		//ToDo - Implement relative offset
+		if (Parent != nullptr)
+		{
+			Parent->ChildRemoved(this);
+		}
+
+		if (parent != nullptr)
+		{
+			parent->ChildAdded(this);
+		}
 
 		worldMatrixDirty = true;
 		Parent = parent;
@@ -35,7 +44,7 @@ public:
 		return Position;
 	}
 
-	void SetPosition(glm::vec3 pos)
+	void SetLocalPosition(glm::vec3 pos)
 	{
 		localMatrixDirty = true;
 		Position = pos;
@@ -57,7 +66,7 @@ public:
 		return Scale;
 	}
 
-	void SetScale(glm::vec3 rot)
+	void SetLocalScale(glm::vec3 rot)
 	{
 		localMatrixDirty = true;
 		Scale = rot;
@@ -83,7 +92,13 @@ private:
 	std::vector<Transform*> Children;
 
 
+	void ChildAdded(Transform* t);
+	void ChildRemoved(Transform * t);
+	void MakeWorldMatrixDirty();
+	Transform* GetRoot();
+
 	// Inherited via Component
 	virtual void Start() override;
+	virtual void Update() override;
 
 };

@@ -179,11 +179,19 @@ int main(int argc, char* argv[])
 		return e;
 	};
 
-	auto cube = createEntityWithModel("Cube", "assets/model/cube/cube.obj", &defaultProgram);
 	auto sponza = createEntityWithModel("Sponza", "assets/model/sponza/sponza.obj", &defaultProgram);
 
-	cube->Transform->SetPosition(glm::vec3(0, 1, 0));
-	sponza->Transform->SetScale(glm::vec3(0.01f));
+	Transform* parent = nullptr;
+	for (int i = 0; i < 9; i++)
+	{
+		auto cubeChild = createEntityWithModel("Cube" + std::to_string(i), "assets/model/cube/cube.obj", &defaultProgram);
+		cubeChild->Transform->SetParent(parent);
+		cubeChild->Transform->SetLocalPosition(glm::vec3(0, 1.0f, 0));
+		cubeChild->Transform->SetLocalScale(glm::vec3(.8f));
+		parent = cubeChild->Transform;
+	}
+	
+	sponza->Transform->SetLocalScale(glm::vec3(0.01f));
 
 #pragma endregion
 
@@ -238,7 +246,7 @@ int main(int argc, char* argv[])
 			lightProgram.use();
 
 			glm::mat4 model = glm::mat4(1.0f);
-			glm::vec3 lightPos = glm::vec3(4 * cosf(totalElapsedTimeByMoveDelta * .1),4 * sinf(totalElapsedTimeByMoveDelta * .1), -2 + 4 * cosf(totalElapsedTimeByMoveDelta * .1));
+			glm::vec3 lightPos = glm::vec3(4 * cosf(totalElapsedTimeByMoveDelta * .1),4 + 4 * sinf(totalElapsedTimeByMoveDelta * .1), -2 + 4 * cosf(totalElapsedTimeByMoveDelta * .1));
 			lightPos += glm::vec3((i + 1) * 3, 0, -(i + 1) * 2);
 			lightPos -= glm::vec3(10, 0, -5);
 			glm::vec3 lightPosViewspace = cam.Matrix() * glm::vec4(lightPos, 1);
@@ -314,7 +322,7 @@ int main(int argc, char* argv[])
 
 #pragma endregion
 
-		world.Update();
+
 
 #pragma region ImGui
 
@@ -357,6 +365,9 @@ int main(int argc, char* argv[])
 		ImGui::Text(str.c_str());
 		ImGui::SliderFloat("Timescale", &moveDeltatimeMultiplier, 0.0f, 20.0f);
 		ImGui::End();
+
+		world.Update();
+		world.OnRender();
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

@@ -39,7 +39,7 @@ public:
 		Parent = parent;
 	}
 
-	glm::vec3 GetPosition()
+	glm::vec3 GetLocalPosition()
 	{
 		return Position;
 	}
@@ -50,26 +50,26 @@ public:
 		Position = pos;
 	}
 
-	glm::vec3 GetRotation()
+	glm::vec3 GetLocalRotation()
 	{
-		return Position;
+		return Rotation;
 	}
 
-	void SetRotation(glm::vec3 rot)
+	void SetLocalRotation(glm::vec3 rot)
 	{
 		localMatrixDirty = true;
 		Rotation = rot;
 	}
 
-	glm::vec3 GetScale()
+	glm::vec3 GetLocalScale()
 	{
 		return Scale;
 	}
 
-	void SetLocalScale(glm::vec3 rot)
+	void SetLocalScale(glm::vec3 scale)
 	{
 		localMatrixDirty = true;
-		Scale = rot;
+		Scale = scale;
 	}
 
 	void UpdateIMGUI();
@@ -91,7 +91,7 @@ private:
 	Transform* Parent;
 	std::vector<Transform*> Children;
 
-
+	void WalkNodes();
 	void ChildAdded(Transform* t);
 	void ChildRemoved(Transform * t);
 	void MakeWorldMatrixDirty();

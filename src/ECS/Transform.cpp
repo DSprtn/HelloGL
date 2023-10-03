@@ -14,36 +14,38 @@ Transform::Transform(Entity* owner) : Component(owner)
 	Parent = nullptr;
 }
 
-void Transform::UpdateIMGUI()
+void Transform::WalkNodes()
 {
-	const auto tName = m_Owner->Name.c_str();
-
-	Transform* parent = Parent;
-	std::string nodeName;
-	while (parent != nullptr)
-	{
-		nodeName = parent->m_Owner->Name + "." + nodeName;
-		parent = parent->Parent;
-	}
-	nodeName += tName;
-
-	ImGui::Begin("Scene");
-
-	if (ImGui::TreeNode(nodeName.c_str()))
+	if (ImGui::TreeNodeEx(m_Owner->Name.c_str(), ImGuiTreeNodeFlags_FramePadding))
 	{
 		bool changed = false;
 
 		changed |= ImGui::DragFloat3("Position", &Position[0], 0.05f);
 		changed |= ImGui::DragFloat3("Rotation", &Rotation[0], 0.05f);
-		changed |= ImGui::DragFloat3("Scale", &Scale[0],0.05f);
-		ImGui::TreePop();
+		changed |= ImGui::DragFloat3("Scale", &Scale[0], 0.05f);
+
 		if (changed)
 		{
 			MakeWorldMatrixDirty();
 			localMatrixDirty = true;
 		}
+		for (Transform* child : Children)
+		{
+			child->WalkNodes();
+		}
+		ImGui::TreePop();
 	}
-	ImGui::End();
+}
+
+void Transform::UpdateIMGUI()
+{
+	// Only build tree from root nodes
+	if (Parent == nullptr)
+	{
+		ImGui::Begin("Scene");
+		WalkNodes();
+		ImGui::End();
+	}
 }
 
 glm::mat4 Transform::WorldMatrix()

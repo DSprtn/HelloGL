@@ -27,13 +27,27 @@
 
 #include <Model.h>
 #include <Entity.h>
-#include <Renderer.h>
 #include <World.h>
+#include <MeshRenderer.h>
+#include <Renderer.h>
 
 namespace
 {
 	float uniformAlpha = .2f;
 	float FOV = 75;
+
+	double computeDelta(std::chrono::steady_clock::time_point& last, double& totalElapsed)
+	{
+		auto now = std::chrono::high_resolution_clock::now();
+		const auto elapsed = std::chrono::high_resolution_clock::now() - last;
+		const long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+		double currentElapsed = ((double)microseconds / 1000000.0);
+		totalElapsed += currentElapsed;
+		last = now;
+
+		return currentElapsed;
+	}
+
 }
 
 bool locked = true;
@@ -162,6 +176,9 @@ int main(int argc, char* argv[])
 	
 	double totalElapsedTimeByMoveDelta = 0.f;
 
+	World world;
+	Renderer renderer;
+
 	Camera cam(window);
 
 	Shader defaultProgram = Shader("Shaders/Technicolor.vert", "Shaders/Technicolor.frag");
@@ -169,17 +186,18 @@ int main(int argc, char* argv[])
 
 
 #pragma region CreateScene
-	World world;
+
 
 
 	auto createEntityWithModel = [&](std::string name, std::string model, Shader* shader)
 	{
 		auto e = world.CreateEntity<Entity>(name);
-		e->AddComponent<Renderer>(model, shader);
+		e->AddComponent<MeshRenderer>(model, shader);
 		return e;
 	};
 
 	auto sponza = createEntityWithModel("Sponza", "assets/model/sponza/sponza.obj", &defaultProgram);
+	sponza->Transform->SetLocalScale(glm::vec3(0.01f));
 
 	Transform* parent = nullptr;
 	for (int i = 0; i < 9; i++)
@@ -191,8 +209,6 @@ int main(int argc, char* argv[])
 		parent = cubeChild->Transform;
 	}
 	
-	sponza->Transform->SetLocalScale(glm::vec3(0.01f));
-
 #pragma endregion
 
 	glEnable(GL_DEPTH_TEST);
@@ -367,7 +383,8 @@ int main(int argc, char* argv[])
 		ImGui::End();
 
 		world.Update();
-		world.OnRender();
+		//world.OnRender();
+		renderer.Render();
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -385,19 +402,6 @@ int main(int argc, char* argv[])
 	glfwTerminate();
 
 	return 0;
-}
-
-
-double computeDelta(std::chrono::steady_clock::time_point& last, double& totalElapsed)
-{
-	auto now = std::chrono::high_resolution_clock::now();
-	const auto elapsed = std::chrono::high_resolution_clock::now() - last;
-	const long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-	double currentElapsed = ((double)microseconds / 1000000.0);
-	totalElapsed += currentElapsed;
-	last = now;
-
-	return currentElapsed;
 }
 
 

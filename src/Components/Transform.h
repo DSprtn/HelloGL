@@ -25,6 +25,12 @@ public:
 	void SetParent(Transform* parent)
 	{
 		//ToDo - Implement relative offset
+
+		if (parent == Parent)
+		{
+			return;
+		}
+
 		if (Parent != nullptr)
 		{
 			Parent->ChildRemoved(this);

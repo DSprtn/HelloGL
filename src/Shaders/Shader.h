@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <string>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -22,12 +23,9 @@ class Shader
 
 public:
 
-	Shader(const std::string& vertSourcePath, const std::string& fragSourcePath)
-	{
-		vertPath = vertSourcePath;
-		fragPath = fragSourcePath;
-		CompileProgram(vertSourcePath, fragSourcePath);
-	}
+	Shader(const std::string& vertSourcePath, const std::string& fragSourcePath);
+
+	~Shader();
 
 	void Reload()
 	{

@@ -1,33 +1,55 @@
-#include "Renderer.h"
+#include <Renderer.h>
 
-Renderer::Renderer(Entity* owner, std::string modelPath, Shader* shader) : Component(owner)
+Renderer* Renderer::Instance = nullptr;
+
+Renderer::Renderer()
 {
-	model = AssetCache::LoadModel(modelPath);
-	this->shader = shader;
+	assert(Instance == nullptr);
+	Instance = this;
 }
 
-void Renderer::Draw()
+void Renderer::Render()
 {
-	shader->use();
-	glm::mat4 t = m_Owner->Transform->WorldMatrix();
-	glm::mat4 tNorm = glm::transpose(glm::inverse(t));
+	for (Shader* s : Shaders)
+	{
+		for (Light* l : Lights)
+		{
+			
+		}
+	}
 
-	shader->SetMat4(tNorm, "Normal");
-	shader->SetMat4(t, "Model");
-
-	model->Draw(*shader);
+	for (MeshRenderer* m : Meshes)
+	{
+		m->Draw();
+	}
 }
 
-void Renderer::Start()
+void Renderer::RegisterShader(Shader* s)
 {
+	Shaders.push_back(s);
 }
 
-void Renderer::Update()
+void Renderer::UnregisterShader(Shader* s)
 {
-
+	Shaders.erase(std::remove(Shaders.begin(), Shaders.end(), s), Shaders.end());
 }
 
-void Renderer::OnRender()
+void Renderer::RegisterMeshRenderer(MeshRenderer* m)
 {
-	Draw();
+	Meshes.push_back(m);
+}
+
+void Renderer::UnregisterMeshRenderer(MeshRenderer* m)
+{
+	Meshes.erase(std::remove(Meshes.begin(), Meshes.end(), m), Meshes.end());
+}
+
+void Renderer::RegisterLight(Light* light)
+{
+	Lights.push_back(light);
+}
+
+void Renderer::UnregisterLight(Light* light)
+{
+	Lights.erase(std::remove(Lights.begin(), Lights.end(), light), Lights.end());
 }

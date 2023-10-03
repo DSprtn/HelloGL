@@ -16,13 +16,17 @@ Transform::Transform(Entity* owner) : Component(owner)
 
 void Transform::WalkNodes()
 {
-	if (ImGui::TreeNodeEx(m_Owner->Name.c_str(), ImGuiTreeNodeFlags_FramePadding))
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(.1f, .1f));
+	if (ImGui::TreeNode(m_Owner->Name.c_str()))
 	{
 		bool changed = false;
-
-		changed |= ImGui::DragFloat3("Position", &Position[0], 0.05f);
-		changed |= ImGui::DragFloat3("Rotation", &Rotation[0], 0.05f);
-		changed |= ImGui::DragFloat3("Scale", &Scale[0], 0.05f);
+		if (ImGui::TreeNode("Transform"))
+		{
+			changed |= ImGui::DragFloat3("Position", &Position[0], 0.05f);
+			changed |= ImGui::DragFloat3("Rotation", &Rotation[0], 0.1f);
+			changed |= ImGui::DragFloat3("Scale", &Scale[0], 0.05f);
+			ImGui::TreePop();
+		}
 
 		if (changed)
 		{
@@ -35,6 +39,7 @@ void Transform::WalkNodes()
 		}
 		ImGui::TreePop();
 	}
+	ImGui::PopStyleVar();
 }
 
 void Transform::UpdateIMGUI()
@@ -73,7 +78,7 @@ glm::mat4 Transform::LocalMatrix()
 	if (localMatrixDirty)
 	{
 		auto mat = glm::translate(glm::mat4(1.0f), Position);
-		mat *= glm::mat4_cast(glm::quat(Rotation));
+		mat *= glm::mat4_cast(glm::quat(glm::radians(Rotation)));
 		mat = glm::scale(mat, Scale);
 		CachedLocalMatrix = mat;
 		localMatrixDirty = false;

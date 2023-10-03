@@ -1,29 +1,32 @@
 #pragma once 
 
-#include <Transform.h>
-#include <Component.h>
-#include <Model.h>
+#include <vector>
+#include <Light.h>
+#include <MeshRenderer.h>
 #include <Shader.h>
-#include <AssetCache.h>
 
-class Renderer : public Component
+
+class Renderer
 {
 public:
-	Renderer(Entity* owner, std::string modelPath, Shader* shader);
+	static Renderer* Instance;
+	
+	Renderer();
 
-	void Draw();
-	bool Visible = true;
-	bool CastShadow = true;
 
+	void Render();
+
+	void RegisterShader(Shader* s);
+	void UnregisterShader(Shader* s);
+
+	void RegisterMeshRenderer(MeshRenderer* m);
+	void UnregisterMeshRenderer(MeshRenderer* m);
+
+	void RegisterLight(Light* light);
+	void UnregisterLight(Light* light);
 
 private:
-	Model* model;
-	Shader* shader;
-
-
-	// Inherited via Component
-	virtual void Start() override;
-
-	virtual void Update() override;
-	virtual void OnRender() override;
+	std::vector<Light*> Lights;
+	std::vector<MeshRenderer*> Meshes;
+	std::vector<Shader*> Shaders;
 };

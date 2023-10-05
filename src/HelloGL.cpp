@@ -178,6 +178,7 @@ int main(int argc, char* argv[])
 
 	World world;
 	Renderer renderer;
+	renderer.Init();
 
 	Camera cam(window);
 
@@ -211,11 +212,7 @@ int main(int argc, char* argv[])
 	
 #pragma endregion
 
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_FRAMEBUFFER_SRGB);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-	glfwSwapInterval(0);
+
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -229,7 +226,7 @@ int main(int argc, char* argv[])
 		}
 
 
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		ImGui_ImplOpenGL3_NewFrame();

@@ -14,6 +14,7 @@ public:
 	Renderer();
 
 
+	void Init();
 	void Render();
 
 	void RegisterShader(Shader* s);

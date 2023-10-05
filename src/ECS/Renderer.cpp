@@ -8,6 +8,16 @@ Renderer::Renderer()
 	Instance = this;
 }
 
+void Renderer::Init()
+{
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_FRAMEBUFFER_SRGB);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glfwSwapInterval(0);
+}
+
 void Renderer::Render()
 {
 	for (Shader* s : Shaders)

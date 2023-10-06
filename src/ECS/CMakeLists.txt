@@ -7,15 +7,19 @@ target_include_directories(HelloGL PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_sources(HelloGL 
 	PRIVATE
+	${CMAKE_CURRENT_LIST_DIR}/Engine.cpp
 	${CMAKE_CURRENT_LIST_DIR}/Entity.cpp
 	${CMAKE_CURRENT_LIST_DIR}/World.cpp
 	${CMAKE_CURRENT_LIST_DIR}/Renderer.cpp
+	${CMAKE_CURRENT_LIST_DIR}/Input.cpp
 
 	PUBLIC
+	${CMAKE_CURRENT_LIST_DIR}/Engine.h
 	${CMAKE_CURRENT_LIST_DIR}/Entity.h
 	${CMAKE_CURRENT_LIST_DIR}/Component.h
 	${CMAKE_CURRENT_LIST_DIR}/World.h
 	${CMAKE_CURRENT_LIST_DIR}/Renderer.h
+	${CMAKE_CURRENT_LIST_DIR}/Input.h
 	)
 	
 # TODO: Add tests and install targets if needed.

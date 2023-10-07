@@ -1,8 +1,10 @@
 #pragma once
 
+#include <glad/glad.h>
+#include <Renderer.h>
 #include <World.h>
 #include <Input.h>
-#include <Renderer.h>
+
 
 class Engine
 {
@@ -13,7 +15,7 @@ public:
 	static Engine* Instance;
 
 	GLFWwindow* Window;
-	Renderer Renderer;
+
 	World* CurrentWorld;
 	uint32_t FrameCount;
 	bool IsRunning;
@@ -23,10 +25,10 @@ public:
 	void Update();
 	void LateUpdate();
 	void OnRender();
-	void HandleEvents();
 
 protected:
-	Input m_inputManager;
+	Input* Input;
+	Renderer* Renderer;
 
 private:
 

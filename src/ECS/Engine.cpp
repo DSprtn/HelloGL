@@ -4,21 +4,23 @@
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
 #include <GLFW/glfw3.h>
-#include <glad/glad.h>
-
 
 namespace
 {
+
 	void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	{
 		glViewport(0, 0, width, height);
 	}
+
+
 }
 
 Engine::Engine() {
+	Instance = this;
 	IsRunning = false;
 	FrameCount = 0;
-	Init();
+
 }
 
 Engine::~Engine() {
@@ -37,14 +39,14 @@ void Engine::Init()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(resX, resY, "LearnOpenGL", NULL, NULL);
-	if (window == NULL)
+	Window = glfwCreateWindow(resX, resY, "LearnOpenGL", NULL, NULL);
+	if (Window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
 	}
 
-	glfwMakeContextCurrent(window);
+	glfwMakeContextCurrent(Window);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -53,30 +55,32 @@ void Engine::Init()
 
 	glViewport(0, 0, resX, resY);
 
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetFramebufferSizeCallback(Window, framebuffer_size_callback);
+
+	// Init IMGUI
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(Window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
 
 	IsRunning = true;
 	Instance = this;
-}
-
-void Engine::Shutdown()
-{
-	delete CurrentWorld;
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
-
-	glfwTerminate();
-	Instance = nullptr;
-	std::cout << "Sayonara!" << std::endl;
+	CurrentWorld = new World();
+	Renderer = new class Renderer();
+	Input = new class Input();
+	Renderer->Init();
+	Input->Init();
 }
 
 void Engine::Update()
 {
+	Input->Update();
+
 	if (CurrentWorld != nullptr) {
 		CurrentWorld->Update();
 	}
-	m_physics.Update();
 }
 
 void Engine::LateUpdate()
@@ -88,30 +92,23 @@ void Engine::LateUpdate()
 
 void Engine::OnRender()
 {
-	SDL_RenderClear(Renderer);
-	if (CurrentWorld != nullptr) {
-		CurrentWorld->OnRender();
-	}
+	Renderer->Update();
+	Renderer->Render();
 
-	SDL_RenderPresent(Renderer);
+	//if (CurrentWorld != nullptr) {
+	//	CurrentWorld->OnRender();
+	//}
+	FrameCount++;
 }
 
-void Engine::HandleEvents()
+void Engine::Shutdown()
 {
-	SDL_Event sdlEvent;
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 
-
-	while (SDL_PollEvent(&sdlEvent)) {
-		switch (sdlEvent.type) {
-		case SDL_QUIT:
-			IsRunning = false;
-			break;
-		default:
-			break;
-		}
-	}
-
-	m_inputManager.Update();
+	delete CurrentWorld;
+	glfwTerminate();
+	Instance = nullptr;
+	std::cout << "Sayonara!" << std::endl;
 }
-
-

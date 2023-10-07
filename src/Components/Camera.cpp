@@ -1,5 +1,5 @@
 #include "Camera.h"
-
+#include <Input.h>
 
 namespace {
 	double lastCursorX = 0;
@@ -7,15 +7,13 @@ namespace {
 	double lastMouseScrollY = 0;
 }
 
-
-Camera::Camera(GLFWwindow* window)
+Camera::Camera(Entity* owner) : Component(owner)
 {
 	m_matrix = glm::mat4(1.0f);
 	m_matrix = glm::translate(m_matrix, glm::vec3(-11.0f, 1.6f, 0.46f));
 	position = glm::vec3(-11.0f, 1.6f, 0.46f);
 	pitch = .12f;
 	yaw = 4.0f;
-	this->window = window;
 	SetProjection(70, 16.0f / 9.0f, 0.1, 100.0);
 }
 
@@ -38,21 +36,21 @@ void Camera::Update(double deltaTime)
 
 	const auto& invMat = Matrix();
 
-	if (glfwGetKey(window, GLFW_KEY_W))
+	if (Input::Instance->GetKeyPressed(GLFW_KEY_W, Input::InputContext::Ingame))
 	{
-		position -= glm::vec3(0.0f, 0.0f, moveSpeed * deltaTime) * glm::quat(invMat);
+		position += glm::vec3(0.0f, 0.0f, -moveSpeed * deltaTime) * glm::quat(invMat);
 	}
-	if (glfwGetKey(window, GLFW_KEY_S))
+	if (Input::Instance->GetKeyPressed(GLFW_KEY_S, Input::InputContext::Ingame))
 	{
-		position -= glm::vec3(0.0f, 0.0f, -moveSpeed * deltaTime) * glm::quat(invMat);
+		position += glm::vec3(0.0f, 0.0f, moveSpeed * deltaTime) * glm::quat(invMat);
 	}
-	if (glfwGetKey(window, GLFW_KEY_A))
+	if (Input::Instance->GetKeyPressed(GLFW_KEY_A, Input::InputContext::Ingame))
 	{
-		position -= glm::vec3(moveSpeed * deltaTime, 0.0f, 0.0f) * glm::quat(invMat);
+		position += glm::vec3(-moveSpeed * deltaTime, 0.0f, 0.0f) * glm::quat(invMat);
 	}
-	if (glfwGetKey(window, GLFW_KEY_D))
+	if (Input::Instance->GetKeyPressed(GLFW_KEY_D, Input::InputContext::Ingame))
 	{
-		position -= glm::vec3(-moveSpeed * deltaTime, 0.0f, 0.0f) * glm::quat(invMat);
+		position += glm::vec3(moveSpeed * deltaTime, 0.0f, 0.0f) * glm::quat(invMat);
 	}
 
 	double cursorPosX, cursorPosY;
@@ -80,4 +78,12 @@ void Camera::Update(double deltaTime)
 	m_matrix = glm::mat4_cast(rotation) * m_matrix;
 	m_matrix[3] = glm::highp_vec4(position.x, position.y, position.z, 1);
 
+}
+
+void Camera::Start()
+{
+}
+
+void Camera::Update()
+{
 }

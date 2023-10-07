@@ -1,15 +1,17 @@
+#pragma once 
 
+#include <Component.h>
+#include <Entity.h>
 #include <glm/glm.hpp>
-
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <GLFW/glfw3.h>
 
-class Camera
+class Camera : public Component
 {
 public:
 
-	Camera(GLFWwindow* window);
+	Camera(Entity* owner);
 
 	void LookAt(glm::vec3 position);
 
@@ -39,8 +41,12 @@ private:
 	glm::quat rotation;
 	float pitch = 0;
 	float yaw = 0;
-	GLFWwindow* window;
 
 	bool m_shouldIgnoreNextUpdate = true;
+
+
+	// Inherited via Component
+	virtual void Start() override;
+	virtual void Update() override;
 
 };

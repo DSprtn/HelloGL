@@ -1,12 +1,8 @@
-﻿
+﻿#include <glad/glad.h>
+#include <imgui_impl_opengl3.h>
+#include <imgui_impl_glfw.h>
 #include <imgui.h>
 
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-
-
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <iostream>
 #include <chrono>
 #include <math.h>
@@ -23,7 +19,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 
 #include <stb_image.h>
-#include "Camera.h"
+
 
 #include <Model.h>
 #include <Entity.h>
@@ -31,10 +27,11 @@
 #include <MeshRenderer.h>
 #include <Renderer.h>
 #include <Input.h>
+#include <Engine.h>
+#include <Camera.h>
 
 namespace
 {
-	float uniformAlpha = .2f;
 	float FOV = 75;
 
 	double computeDelta(std::chrono::steady_clock::time_point& last, double& totalElapsed)
@@ -52,7 +49,6 @@ namespace
 }
 
 bool locked = true;
-bool shouldReloadShaders = false;
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
@@ -74,31 +70,18 @@ void kbCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 		}
 		locked = !locked;
 	}
-
-	if (key == GLFW_KEY_R && action == GLFW_PRESS)
-	{
-		if (locked)
-		{
-			shouldReloadShaders = true;
-		}
-	}
 }
 
 
 int main(int argc, char* argv[])
 {
+	Engine engine;
+	engine.Init();
 
-	
-	glfwSetKeyCallback(window, kbCallback);
-	glfwSetScrollCallback(window, scroll_callback);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetKeyCallback(engine.Window, kbCallback);
+	glfwSetScrollCallback(engine.Window, scroll_callback);
+	glfwSetInputMode(engine.Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	ImGui::StyleColorsDark();
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 330");
 
 	float lightRadius[4] = {5,5,5,5};
 	float pointLightColor[4][3]
@@ -131,11 +114,9 @@ int main(int argc, char* argv[])
 	
 	double totalElapsedTimeByMoveDelta = 0.f;
 
-	World world;
-	Renderer renderer;
-	renderer.Init();
+	GLFWwindow* window = engine.Window;
 
-	Camera cam(window);
+
 
 	Shader defaultProgram = Shader("Shaders/Technicolor.vert", "Shaders/Technicolor.frag");
 	Shader lightProgram = Shader("Shaders/Light.vert", "Shaders/Light.frag");
@@ -147,10 +128,19 @@ int main(int argc, char* argv[])
 
 	auto createEntityWithModel = [&](std::string name, std::string model, Shader* shader)
 	{
-		auto e = world.CreateEntity<Entity>(name);
+		auto e = engine.CurrentWorld->CreateEntity<Entity>(name);
 		e->AddComponent<MeshRenderer>(model, shader);
 		return e;
 	};
+
+	auto createEntity = [&](std::string name)
+	{
+		auto e = engine.CurrentWorld->CreateEntity<Entity>(name);
+		return e;
+	};
+
+	auto camEntity = createEntity("MainCam");
+	auto cam = camEntity->AddComponent<Camera>(engine.Window);
 
 	auto sponza = createEntityWithModel("Sponza", "assets/model/sponza/sponza.obj", &defaultProgram);
 	sponza->Transform->SetLocalScale(glm::vec3(0.01f));
@@ -173,17 +163,6 @@ int main(int argc, char* argv[])
 
 	while (!glfwWindowShouldClose(window))
 	{
-		if (shouldReloadShaders)
-		{
-			defaultProgram.Reload();
-			lightProgram.Reload();
-			shouldReloadShaders = false;
-
-			glUseProgram(defaultProgram);
-		}
-
-
-
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		ImGui_ImplOpenGL3_NewFrame();
@@ -197,14 +176,14 @@ int main(int argc, char* argv[])
 
 		if (locked)
 		{
-			cam.Update(deltaTime);
+			cam->Update(deltaTime);
 		}
 		else
 		{
-			cam.IgnoreNextUpdate();
+			cam->IgnoreNextUpdate();
 		}
 		
-		cam.SetProjection(FOV, 16.0 / 9.0, 0.1, 1000);
+		cam->SetProjection(FOV, 16.0 / 9.0, 0.1, 1000);
 
 #pragma region Setup_Lights
 
@@ -219,13 +198,13 @@ int main(int argc, char* argv[])
 			glm::vec3 lightPos = glm::vec3(4 * cosf(totalElapsedTimeByMoveDelta * .1),4 + 4 * sinf(totalElapsedTimeByMoveDelta * .1), -2 + 4 * cosf(totalElapsedTimeByMoveDelta * .1));
 			lightPos += glm::vec3((i + 1) * 3, 0, -(i + 1) * 2);
 			lightPos -= glm::vec3(10, 0, -5);
-			glm::vec3 lightPosViewspace = cam.Matrix() * glm::vec4(lightPos, 1);
+			glm::vec3 lightPosViewspace = cam->Matrix() * glm::vec4(lightPos, 1);
 			model = glm::translate(model, lightPos);
 			model = glm::scale(model, glm::vec3(0.1f));
 			glm::vec3 lightColor = glm::vec3(pointLightColor[i][0], pointLightColor[i][1], pointLightColor[i][2]);
 
-			lightProgram.SetMat4(cam.ProjectionMatrix(), "Projection");
-			lightProgram.SetMat4(cam.Matrix(), "View");
+			lightProgram.SetMat4(cam->ProjectionMatrix(), "Projection");
+			lightProgram.SetMat4(cam->Matrix(), "View");
 			lightProgram.SetMat4(model, "Model");
 			lightProgram.setVec3(lightColor, "LightCol");
 
@@ -252,11 +231,11 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		glm::vec3 directionalLightDir = cam.Matrix() * glm::normalize(glm::vec4(directionalLightDirection[0], directionalLightDirection[1], directionalLightDirection[2], 0.0f));
+		glm::vec3 directionalLightDir = cam->Matrix() * glm::normalize(glm::vec4(directionalLightDirection[0], directionalLightDirection[1], directionalLightDirection[2], 0.0f));
 		glm::vec3 dirLightColor = glm::vec3(directionalLightColor[0], directionalLightColor[1], directionalLightColor[2]);
 
-		glm::vec3 spotLightDir = cam.Matrix() * glm::normalize(glm::vec4(spotLightDirection[0], spotLightDirection[1], spotLightDirection[2], 0.0f));
-		glm::vec3 spotLightPos = cam.Matrix() * glm::vec4(spotLightPosition[0], spotLightPosition[1], spotLightPosition[2], 1);
+		glm::vec3 spotLightDir = cam->Matrix() * glm::normalize(glm::vec4(spotLightDirection[0], spotLightDirection[1], spotLightDirection[2], 0.0f));
+		glm::vec3 spotLightPos = cam->Matrix() * glm::vec4(spotLightPosition[0], spotLightPosition[1], spotLightPosition[2], 1);
 		glm::vec3 spotLightCol = glm::vec3(spotLightColor[0], spotLightColor[1], spotLightColor[2]);
 
 		defaultProgram.use();
@@ -284,11 +263,11 @@ int main(int argc, char* argv[])
 		defaultProgram.setFloat(glm::cos(glm::radians(spotLightInnerCone)), "spotlight.innerCone");
 		defaultProgram.setFloat(glm::cos(glm::radians(spotLightOuterCone)), "spotlight.outerCone");
 
-		glm::vec4 globalCol = glm::vec4(1 + static_cast<float>(sin(totalElapsedTimeByMoveDelta * 2)), 0.0f, 0.0f, uniformAlpha);
+		//glm::vec4 globalCol = glm::vec4(1 + static_cast<float>(sin(totalElapsedTimeByMoveDelta * 2)), 0.0f, 0.0f, uniformAlpha);
 
-		defaultProgram.setVec4(globalCol, "globalCol");
-		defaultProgram.SetMat4(cam.ProjectionMatrix(), "Projection");
-		defaultProgram.SetMat4(cam.Matrix(), "View");
+		//defaultProgram.setVec4(globalCol, "globalCol");
+		defaultProgram.SetMat4(cam->ProjectionMatrix(), "Projection");
+		defaultProgram.SetMat4(cam->Matrix(), "View");
 
 #pragma endregion
 
@@ -335,25 +314,13 @@ int main(int argc, char* argv[])
 		ImGui::Text(str.c_str());
 		ImGui::SliderFloat("Timescale", &moveDeltatimeMultiplier, 0.0f, 20.0f);
 		ImGui::End();
-
-		world.Update();
-		//world.OnRender();
-		renderer.Render();
-
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
 #pragma endregion 
 
-		glfwPollEvents();
-		glfwSwapBuffers(window);
+		engine.Update();
+		engine.LateUpdate();
+		engine.OnRender();
 	}
 
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
-
-	glfwTerminate();
 
 	return 0;
 }

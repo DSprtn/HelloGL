@@ -1,4 +1,8 @@
 #include <Renderer.h>
+#include <Input.h>
+#include <imgui_impl_opengl3.h>
+#include <imgui_impl_glfw.h>
+#include <Engine.h>
 
 Renderer* Renderer::Instance = nullptr;
 
@@ -20,6 +24,7 @@ void Renderer::Init()
 
 void Renderer::Render()
 {
+
 	for (Shader* s : Shaders)
 	{
 		for (Light* l : Lights)
@@ -31,6 +36,23 @@ void Renderer::Render()
 	for (MeshRenderer* m : Meshes)
 	{
 		m->Draw();
+	}
+
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+
+	glfwSwapBuffers(Engine::Instance->Window);
+}
+
+void Renderer::Update()
+{
+	if (Input::Instance->GetKeyPressed(GLFW_KEY_R))
+	{
+		for (auto shader : Shaders)
+		{
+			shader->Reload();
+		}
 	}
 }
 
@@ -62,4 +84,9 @@ void Renderer::RegisterLight(Light* light)
 void Renderer::UnregisterLight(Light* light)
 {
 	Lights.erase(std::remove(Lights.begin(), Lights.end(), light), Lights.end());
+}
+
+void Renderer::SetCamera(Camera* cam)
+{
+	this->MainCamera = cam;
 }

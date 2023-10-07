@@ -1,31 +1,40 @@
 #pragma once 
-#include <GLFW/glfw3.h>
+
 #include <glm/ext/vector_float2.hpp>
 
 
 class Input
 {
 public:
-	static Input* Instance;
 
-	Input(GLFWwindow* Window);
+	enum class InputContext
+	{
+		Menus,
+		Ingame
+	};
+
+public:
+
+	static Input* Instance;
+	InputContext Context;
+
+	Input();
 	~Input();
 	
 
 	void Init();
+	void Update();
 
-	glm::vec2 GetScroll();
-	void GetKeyPressed();
+	glm::vec2 ScrollInput;
+	int GetKeyPressed(int key);
+	int GetKeyPressed(int key, InputContext filter);
+	void ToggleContext();
 
 private:
-	glm::vec2 LastScrollInput;
-	GLFWwindow* Window;
-
-	void scroll_callback(GLFWwindow* window, double x, double y);
-
 	Input(Input& other) = delete;
 	Input(const Input&& other) = delete;
 
 	Input& operator=(const Input& other) = delete;
 	Input& operator=(Input&& other) = delete;
+
 };

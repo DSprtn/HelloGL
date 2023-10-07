@@ -36,5 +36,5 @@ void MeshRenderer::Update()
 
 void MeshRenderer::OnRender()
 {
-	Draw();
+	//Draw();
 }

@@ -10,11 +10,13 @@ target_sources(HelloGL
 	${CMAKE_CURRENT_LIST_DIR}/Transform.cpp
 	${CMAKE_CURRENT_LIST_DIR}/MeshRenderer.cpp
 	${CMAKE_CURRENT_LIST_DIR}/Light.cpp
+	${CMAKE_CURRENT_LIST_DIR}/Camera.cpp
 
 	PUBLIC
 	${CMAKE_CURRENT_LIST_DIR}/Transform.h
 	${CMAKE_CURRENT_LIST_DIR}/MeshRenderer.h
 	${CMAKE_CURRENT_LIST_DIR}/Light.h
+	${CMAKE_CURRENT_LIST_DIR}/Camera.h
 )
 	
 # TODO: Add tests and install targets if needed.

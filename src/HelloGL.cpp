@@ -20,7 +20,6 @@
 
 #include <stb_image.h>
 
-
 #include <Model.h>
 #include <Entity.h>
 #include <World.h>
@@ -29,59 +28,32 @@
 #include <Input.h>
 #include <Engine.h>
 #include <Camera.h>
+#include <Timer.h>
 
 namespace
 {
-	float FOV = 75;
-
-	double computeDelta(std::chrono::steady_clock::time_point& last, double& totalElapsed)
+	void computeTimings(std::chrono::steady_clock::time_point& last, float timeScale)
 	{
 		auto now = std::chrono::high_resolution_clock::now();
 		const auto elapsed = std::chrono::high_resolution_clock::now() - last;
 		const long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
 		double currentElapsed = ((double)microseconds / 1000000.0);
-		totalElapsed += currentElapsed;
 		last = now;
 
-		return currentElapsed;
-	}
+		double deltaTime = currentElapsed;
 
-}
+		Timer::DeltaTime = deltaTime * timeScale;
+		Timer::UnscaledDeltaTime = deltaTime;
 
-bool locked = true;
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-	FOV += yoffset * 10.0f;
-	FOV = glm::clamp(FOV, 0.01f, 179.9f);
-}
-
-void kbCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-	{
-		if (locked)
-		{
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		}
-		else
-		{
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		}
-		locked = !locked;
+		Timer::ElapsedTime += deltaTime * timeScale;
+		Timer::UnscaledElapsedTime += deltaTime;
 	}
 }
-
 
 int main(int argc, char* argv[])
 {
 	Engine engine;
 	engine.Init();
-
-	glfwSetKeyCallback(engine.Window, kbCallback);
-	glfwSetScrollCallback(engine.Window, scroll_callback);
-	glfwSetInputMode(engine.Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
 
 	float lightRadius[4] = {5,5,5,5};
 	float pointLightColor[4][3]
@@ -107,24 +79,16 @@ int main(int argc, char* argv[])
 	bool  spotLightMountToHead = false;
 
 	constexpr int fpsAvgCount = 30;
-	std::array<float, 30> deltaTimeAverage{};
+	std::array<double, 30> deltaTimeAverage{};
 	int deltaIndex = 0;
 	
-	float moveDeltatimeMultiplier = 1.0f;
-	
-	double totalElapsedTimeByMoveDelta = 0.f;
-
+	float timeScale = 1.0f;
 	GLFWwindow* window = engine.Window;
-
-
 
 	Shader defaultProgram = Shader("Shaders/Technicolor.vert", "Shaders/Technicolor.frag");
 	Shader lightProgram = Shader("Shaders/Light.vert", "Shaders/Light.frag");
 
-
 #pragma region CreateScene
-
-
 
 	auto createEntityWithModel = [&](std::string name, std::string model, Shader* shader)
 	{
@@ -140,7 +104,7 @@ int main(int argc, char* argv[])
 	};
 
 	auto camEntity = createEntity("MainCam");
-	auto cam = camEntity->AddComponent<Camera>(engine.Window);
+	auto cam = camEntity->AddComponent<Camera>();
 
 	auto sponza = createEntityWithModel("Sponza", "assets/model/sponza/sponza.obj", &defaultProgram);
 	sponza->Transform->SetLocalScale(glm::vec3(0.01f));
@@ -157,9 +121,7 @@ int main(int argc, char* argv[])
 	
 #pragma endregion
 
-
-	auto lastMeasuredTime = std::chrono::high_resolution_clock::now();
-	double totalElapsedTime = 0.0;
+	auto last = std::chrono::high_resolution_clock::now();
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -169,21 +131,7 @@ int main(int argc, char* argv[])
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		double deltaTime = computeDelta(lastMeasuredTime, totalElapsedTime);
-
-		double moveDelta = deltaTime * moveDeltatimeMultiplier;
-		totalElapsedTimeByMoveDelta += moveDelta;
-
-		if (locked)
-		{
-			cam->Update(deltaTime);
-		}
-		else
-		{
-			cam->IgnoreNextUpdate();
-		}
-		
-		cam->SetProjection(FOV, 16.0 / 9.0, 0.1, 1000);
+		computeTimings(last, timeScale);
 
 #pragma region Setup_Lights
 
@@ -195,20 +143,18 @@ int main(int argc, char* argv[])
 			lightProgram.use();
 
 			glm::mat4 model = glm::mat4(1.0f);
-			glm::vec3 lightPos = glm::vec3(4 * cosf(totalElapsedTimeByMoveDelta * .1),4 + 4 * sinf(totalElapsedTimeByMoveDelta * .1), -2 + 4 * cosf(totalElapsedTimeByMoveDelta * .1));
+			glm::vec3 lightPos = glm::vec3(4 * cosf(Timer::ElapsedTime * .1),4 + 4 * sinf(Timer::ElapsedTime * .1), -2 + 4 * cosf(Timer::ElapsedTime * .1));
 			lightPos += glm::vec3((i + 1) * 3, 0, -(i + 1) * 2);
 			lightPos -= glm::vec3(10, 0, -5);
-			glm::vec3 lightPosViewspace = cam->Matrix() * glm::vec4(lightPos, 1);
+			glm::vec3 lightPosViewspace = cam->ViewMatrix() * glm::vec4(lightPos, 1);
 			model = glm::translate(model, lightPos);
 			model = glm::scale(model, glm::vec3(0.1f));
 			glm::vec3 lightColor = glm::vec3(pointLightColor[i][0], pointLightColor[i][1], pointLightColor[i][2]);
 
 			lightProgram.SetMat4(cam->ProjectionMatrix(), "Projection");
-			lightProgram.SetMat4(cam->Matrix(), "View");
+			lightProgram.SetMat4(cam->ViewMatrix(), "View");
 			lightProgram.SetMat4(model, "Model");
 			lightProgram.setVec3(lightColor, "LightCol");
-
-
 
 			defaultProgram.use();
 
@@ -231,11 +177,11 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		glm::vec3 directionalLightDir = cam->Matrix() * glm::normalize(glm::vec4(directionalLightDirection[0], directionalLightDirection[1], directionalLightDirection[2], 0.0f));
+		glm::vec3 directionalLightDir = cam->ViewMatrix() * glm::normalize(glm::vec4(directionalLightDirection[0], directionalLightDirection[1], directionalLightDirection[2], 0.0f));
 		glm::vec3 dirLightColor = glm::vec3(directionalLightColor[0], directionalLightColor[1], directionalLightColor[2]);
 
-		glm::vec3 spotLightDir = cam->Matrix() * glm::normalize(glm::vec4(spotLightDirection[0], spotLightDirection[1], spotLightDirection[2], 0.0f));
-		glm::vec3 spotLightPos = cam->Matrix() * glm::vec4(spotLightPosition[0], spotLightPosition[1], spotLightPosition[2], 1);
+		glm::vec3 spotLightDir = cam->ViewMatrix() * glm::normalize(glm::vec4(spotLightDirection[0], spotLightDirection[1], spotLightDirection[2], 0.0f));
+		glm::vec3 spotLightPos = cam->ViewMatrix() * glm::vec4(spotLightPosition[0], spotLightPosition[1], spotLightPosition[2], 1);
 		glm::vec3 spotLightCol = glm::vec3(spotLightColor[0], spotLightColor[1], spotLightColor[2]);
 
 		defaultProgram.use();
@@ -267,11 +213,9 @@ int main(int argc, char* argv[])
 
 		//defaultProgram.setVec4(globalCol, "globalCol");
 		defaultProgram.SetMat4(cam->ProjectionMatrix(), "Projection");
-		defaultProgram.SetMat4(cam->Matrix(), "View");
+		defaultProgram.SetMat4(cam->ViewMatrix(), "View");
 
 #pragma endregion
-
-
 
 #pragma region ImGui
 
@@ -300,19 +244,22 @@ int main(int argc, char* argv[])
 		ImGui::Begin("Simulation");
 		
 
-		deltaTimeAverage[deltaIndex] = deltaTime;
+		deltaTimeAverage[deltaIndex] = Timer::UnscaledDeltaTime;
 		deltaIndex += 1;
 		if (deltaIndex > deltaTimeAverage.size() - 1)
 		{
 			deltaIndex = 0;
 		}
 
-		float avg = std::accumulate(deltaTimeAverage.begin(), deltaTimeAverage.end(), 0.0f) / deltaTimeAverage.size();
+		double avg = std::accumulate(deltaTimeAverage.begin(), deltaTimeAverage.end(), 0.0f) / deltaTimeAverage.size();
 
 
 		auto str = "FPS: " + std::to_string(1 / avg);
+		auto frametimeStr = "Frametime: " + std::to_string(avg * 1000.0) + " ms";
+
 		ImGui::Text(str.c_str());
-		ImGui::SliderFloat("Timescale", &moveDeltatimeMultiplier, 0.0f, 20.0f);
+		ImGui::Text(frametimeStr.c_str());
+		ImGui::SliderFloat("Timescale", &timeScale, 0.0f, 20.0f);
 		ImGui::End();
 #pragma endregion 
 
@@ -324,5 +271,7 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
+
+
 
 

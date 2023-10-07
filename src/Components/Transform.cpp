@@ -14,7 +14,7 @@ Transform::Transform(Entity* owner) : Component(owner)
 	Parent = nullptr;
 }
 
-void Transform::WalkNodes()
+void Transform::RecurseImGuiScene()
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(.1f, .1f));
 	if (ImGui::TreeNode(m_Owner->Name.c_str()))
@@ -35,7 +35,7 @@ void Transform::WalkNodes()
 		}
 		for (Transform* child : Children)
 		{
-			child->WalkNodes();
+			child->RecurseImGuiScene();
 		}
 		ImGui::TreePop();
 	}
@@ -47,8 +47,10 @@ void Transform::UpdateIMGUI()
 	// Only build tree from root nodes
 	if (Parent == nullptr)
 	{
-		ImGui::Begin("Scene");
-		WalkNodes();
+		if (ImGui::Begin("Scene"))
+		{
+			RecurseImGuiScene();
+		}
 		ImGui::End();
 	}
 }

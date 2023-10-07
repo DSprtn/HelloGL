@@ -1,26 +1,16 @@
 #include "Camera.h"
 #include <Input.h>
+#include <Engine.h>
+#include <Timer.h>
 
 namespace {
 	double lastCursorX = 0;
 	double lastCursorY = 0;
-	double lastMouseScrollY = 0;
 }
 
 Camera::Camera(Entity* owner) : Component(owner)
 {
-	m_matrix = glm::mat4(1.0f);
-	m_matrix = glm::translate(m_matrix, glm::vec3(-11.0f, 1.6f, 0.46f));
-	position = glm::vec3(-11.0f, 1.6f, 0.46f);
-	pitch = .12f;
-	yaw = 4.0f;
 	SetProjection(70, 16.0f / 9.0f, 0.1, 100.0);
-}
-
-void Camera::LookAt(glm::vec3 targetPosition)
-{
-	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-	m_matrix = glm::lookAt(position, glm::vec3(0,0,-1) * glm::quat(m_matrix) + targetPosition, cameraUp);
 }
 
 void Camera::SetProjection(float FOV, float aspect, float near, float far)
@@ -28,33 +18,17 @@ void Camera::SetProjection(float FOV, float aspect, float near, float far)
 	m_projectionMatrix = glm::perspective(glm::radians(FOV), aspect, near, far);
 }
 
-void Camera::Update(double deltaTime)
+void Camera::Start()
 {
-	bool fastMode = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
+	m_Owner->Transform->SetLocalPosition(glm::vec3(-11.0f, 1.6f, 0.46f));
+}
 
-	float moveSpeed = fastMode ? 24.0f : 4.0f;
-
-	const auto& invMat = Matrix();
-
-	if (Input::Instance->GetKeyPressed(GLFW_KEY_W, Input::InputContext::Ingame))
-	{
-		position += glm::vec3(0.0f, 0.0f, -moveSpeed * deltaTime) * glm::quat(invMat);
-	}
-	if (Input::Instance->GetKeyPressed(GLFW_KEY_S, Input::InputContext::Ingame))
-	{
-		position += glm::vec3(0.0f, 0.0f, moveSpeed * deltaTime) * glm::quat(invMat);
-	}
-	if (Input::Instance->GetKeyPressed(GLFW_KEY_A, Input::InputContext::Ingame))
-	{
-		position += glm::vec3(-moveSpeed * deltaTime, 0.0f, 0.0f) * glm::quat(invMat);
-	}
-	if (Input::Instance->GetKeyPressed(GLFW_KEY_D, Input::InputContext::Ingame))
-	{
-		position += glm::vec3(moveSpeed * deltaTime, 0.0f, 0.0f) * glm::quat(invMat);
-	}
+void Camera::Update()
+{
+	SetProjection(FOV, 16.0 / 9.0, 0.1, 1000);
 
 	double cursorPosX, cursorPosY;
-	glfwGetCursorPos(window, &cursorPosX, &cursorPosY);
+	glfwGetCursorPos(Engine::Instance->Window, &cursorPosX, &cursorPosY);
 
 	double yDelta = cursorPosX - lastCursorX;
 	double xDelta = cursorPosY - lastCursorY;
@@ -62,28 +36,49 @@ void Camera::Update(double deltaTime)
 	lastCursorX = cursorPosX;
 	lastCursorY = cursorPosY;
 
-	if (m_shouldIgnoreNextUpdate)
+	if (Input::Instance->Context != Input::InputContext::Ingame)
 	{
-		m_shouldIgnoreNextUpdate = false;
 		return;
 	}
 
-	pitch += xDelta * deltaTime;
-	yaw += yDelta * deltaTime;
-	pitch = glm::clamp(pitch, glm::radians(-90.0f), glm::radians(90.0f));
+	const double deltaTime = Timer::UnscaledDeltaTime;
 
-	m_matrix = glm::mat4(1.0f);
-	auto rotation = glm::angleAxis(-yaw, glm::vec3(0, 1, 0));
-	rotation *= glm::angleAxis(-pitch, glm::vec3(1, 0, 0));
-	m_matrix = glm::mat4_cast(rotation) * m_matrix;
-	m_matrix[3] = glm::highp_vec4(position.x, position.y, position.z, 1);
+	const bool fastMode = glfwGetKey(Engine::Instance->Window, GLFW_KEY_LEFT_SHIFT);
 
-}
+	const float moveSpeed = fastMode ? 24.0f : 4.0f;
 
-void Camera::Start()
-{
-}
+	FOV += Input::Instance->ScrollInput.y * 500.0f * deltaTime;
+	FOV = glm::clamp(FOV, 0.01f, 179.9f);
 
-void Camera::Update()
-{
+	const auto& invMatQuat = glm::quat(ViewMatrix());
+
+	if (Input::Instance->GetKeyPressed(GLFW_KEY_W, Input::InputContext::Ingame))
+	{
+		m_Owner->Transform->Translate(glm::vec3(0.0f, 0.0f, -moveSpeed * deltaTime) * invMatQuat);
+	}
+	if (Input::Instance->GetKeyPressed(GLFW_KEY_S, Input::InputContext::Ingame))
+	{
+		m_Owner->Transform->Translate(glm::vec3(0.0f, 0.0f, moveSpeed * deltaTime) * invMatQuat);
+	}
+	if (Input::Instance->GetKeyPressed(GLFW_KEY_A, Input::InputContext::Ingame))
+	{
+		m_Owner->Transform->Translate(glm::vec3(-moveSpeed * deltaTime, 0.0f, 0.0f) * invMatQuat);
+	}
+	if (Input::Instance->GetKeyPressed(GLFW_KEY_D, Input::InputContext::Ingame))
+	{
+		m_Owner->Transform->Translate(glm::vec3(moveSpeed * deltaTime, 0.0f, 0.0f) * invMatQuat);
+	}
+
+	const float lookSensitivity = 15.0f;
+
+	glm::vec3 rotation = m_Owner->Transform->GetLocalRotation();
+
+	float pitch = rotation.x + -xDelta * lookSensitivity * deltaTime;
+	pitch = glm::clamp(pitch, -90.0f, 90.0f);
+
+	const float yaw = rotation.y + -yDelta * lookSensitivity * deltaTime;
+
+	rotation = glm::vec3(pitch, yaw, 0.0f);
+
+	m_Owner->Transform->SetLocalRotation(rotation);
 }

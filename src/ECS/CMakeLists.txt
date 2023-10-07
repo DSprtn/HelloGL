@@ -12,6 +12,7 @@ target_sources(HelloGL
 	${CMAKE_CURRENT_LIST_DIR}/World.cpp
 	${CMAKE_CURRENT_LIST_DIR}/Renderer.cpp
 	${CMAKE_CURRENT_LIST_DIR}/Input.cpp
+	${CMAKE_CURRENT_LIST_DIR}/Timer.cpp
 
 	PUBLIC
 	${CMAKE_CURRENT_LIST_DIR}/Engine.h
@@ -20,6 +21,7 @@ target_sources(HelloGL
 	${CMAKE_CURRENT_LIST_DIR}/World.h
 	${CMAKE_CURRENT_LIST_DIR}/Renderer.h
 	${CMAKE_CURRENT_LIST_DIR}/Input.h
+	${CMAKE_CURRENT_LIST_DIR}/Timer.h
 	)
 	
 # TODO: Add tests and install targets if needed.

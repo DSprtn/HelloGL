@@ -6,8 +6,14 @@
 
 Renderer* Renderer::Instance = nullptr;
 
+namespace
+{
+	bool VSync = true;
+}
+
 Renderer::Renderer()
 {
+	MainCamera = nullptr;
 	assert(Instance == nullptr);
 	Instance = this;
 }
@@ -19,11 +25,16 @@ void Renderer::Init()
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glfwSwapInterval(0);
 }
 
 void Renderer::Render()
 {
+	ImGui::Begin("Renderer Settings");
+	if (ImGui::Checkbox("VSync", &VSync))
+	{
+		glfwSwapInterval(VSync);
+	}
+	ImGui::End();
 
 	for (Shader* s : Shaders)
 	{

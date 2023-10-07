@@ -52,8 +52,14 @@ public:
 
 	void SetLocalPosition(glm::vec3 pos)
 	{
+		worldMatrixDirty = true;
 		localMatrixDirty = true;
 		Position = pos;
+	}
+
+	void Translate(glm::vec3 pos)
+	{
+		Position += pos;
 	}
 
 	glm::vec3 GetLocalRotation()
@@ -63,6 +69,7 @@ public:
 
 	void SetLocalRotation(glm::vec3 rot)
 	{
+		worldMatrixDirty = true;
 		localMatrixDirty = true;
 		Rotation = rot;
 	}
@@ -97,7 +104,7 @@ private:
 	Transform* Parent;
 	std::vector<Transform*> Children;
 
-	void WalkNodes();
+	void RecurseImGuiScene();
 	void ChildAdded(Transform* t);
 	void ChildRemoved(Transform * t);
 	void MakeWorldMatrixDirty();

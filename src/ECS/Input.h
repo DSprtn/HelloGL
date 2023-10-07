@@ -1,6 +1,7 @@
 #pragma once 
 
 #include <glm/ext/vector_float2.hpp>
+#include <array>
 
 
 class Input
@@ -28,7 +29,13 @@ public:
 	glm::vec2 ScrollInput;
 	int GetKeyPressed(int key);
 	int GetKeyPressed(int key, InputContext filter);
+
+	bool GetKeyDown(int key);
+	bool GetKeyDown(int key, InputContext filter);
+
 	void ToggleContext();
+
+	std::array<bool, 500> keyPresses;
 
 private:
 	Input(Input& other) = delete;

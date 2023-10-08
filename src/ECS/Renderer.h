@@ -17,7 +17,11 @@ public:
 
 
 	void Init();
+
+	void BeginFrame();
 	void Render();
+	void EndFrame();
+
 	void Update();
 
 	void RegisterShader(Shader* s);

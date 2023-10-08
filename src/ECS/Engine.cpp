@@ -4,6 +4,8 @@
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
 #include <GLFW/glfw3.h>
+#include <Timer.h>
+#include <numeric>
 
 namespace
 {
@@ -11,6 +13,7 @@ namespace
 	{
 		glViewport(0, 0, width, height);
 	}
+
 }
 
 Engine::Engine() {
@@ -62,18 +65,19 @@ void Engine::Init()
 	ImGui_ImplGlfw_InitForOpenGL(Window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
-	IsRunning = true;
 	Instance = this;
 	CurrentWorld = new World();
 	Renderer = new class Renderer();
 	Input = new class Input();
 	Renderer->Init();
 	Input->Init();
+	IsRunning = true;
 }
 
 void Engine::Update()
 {
 	Input->Update();
+	Renderer->Update();
 
 	if (CurrentWorld != nullptr) {
 		CurrentWorld->Update();
@@ -89,12 +93,16 @@ void Engine::LateUpdate()
 
 void Engine::OnRender()
 {
-	Renderer->Update();
+	Renderer->BeginFrame();
+
 	Renderer->Render();
 
-	//if (CurrentWorld != nullptr) {
-	//	CurrentWorld->OnRender();
-	//}
+	if (CurrentWorld != nullptr) {
+		CurrentWorld->OnRender();
+	}
+
+	Renderer->EndFrame();
+
 	FrameCount++;
 }
 

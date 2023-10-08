@@ -21,6 +21,8 @@
 class Shader
 {
 
+	
+
 public:
 
 	Shader(const std::string& vertSourcePath, const std::string& fragSourcePath);

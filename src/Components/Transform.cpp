@@ -89,6 +89,18 @@ glm::mat4 Transform::LocalMatrix()
 	return CachedLocalMatrix;
 }
 
+void Transform::EnsureUpToDate()
+{
+	if (localMatrixDirty)
+	{
+		LocalMatrix();
+	}
+	if (worldMatrixDirty)
+	{
+		WorldMatrix();
+	}
+}
+
 void Transform::ChildAdded(Transform* t)
 {
 	Children.push_back(t);
@@ -124,7 +136,7 @@ void Transform::Start()
 {
 }
 
-void Transform::Update()
+void Transform::OnRender()
 {
 	UpdateIMGUI();
 }

@@ -1,12 +1,25 @@
 #pragma once
 
-class Timer
+#include <chrono>
+
+namespace Core
 {
-public:
-	static double DeltaTime;
-	static double ElapsedTime;
-	static double UnscaledElapsedTime;
-	static double UnscaledDeltaTime;
-private:
-	Timer() {};
-};
+	class Time
+	{
+	public:
+		static double DeltaTime;
+		static double ElapsedTime;
+		static double UnscaledElapsedTime;
+		static double UnscaledDeltaTime;
+		static float Timescale;
+
+		static void ComputeDeltas();
+
+		static void Init();
+
+	private:
+		static std::chrono::steady_clock::time_point Last;
+
+		Time() {};
+	};
+}

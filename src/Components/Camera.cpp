@@ -10,6 +10,7 @@ namespace {
 
 Camera::Camera(Entity* owner) : Component(owner)
 {
+	Renderer::Instance->SetCamera(this);
 	SetProjection(70, 16.0f / 9.0f, 0.1, 100.0);
 }
 
@@ -41,7 +42,7 @@ void Camera::Update()
 		return;
 	}
 
-	const double deltaTime = Timer::UnscaledDeltaTime;
+	const double deltaTime = Core::Time::UnscaledDeltaTime;
 
 	const bool fastMode = glfwGetKey(Engine::Instance->Window, GLFW_KEY_LEFT_SHIFT);
 

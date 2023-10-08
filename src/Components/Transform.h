@@ -47,40 +47,65 @@ public:
 
 	glm::vec3 GetLocalPosition()
 	{
+		EnsureUpToDate();
 		return Position;
+	}
+
+	glm::vec3 GetWorldForward()
+	{
+		EnsureUpToDate();
+		return CachedWorldMatrix * glm::vec4(0,0,1,0);
+	}
+
+	glm::vec3 GetWorldPosition()
+	{
+		EnsureUpToDate();
+		return glm::vec3(CachedWorldMatrix[3]);
 	}
 
 	void SetLocalPosition(glm::vec3 pos)
 	{
-		worldMatrixDirty = true;
+		MakeWorldMatrixDirty();
 		localMatrixDirty = true;
 		Position = pos;
 	}
 
 	void Translate(glm::vec3 pos)
 	{
+		MakeWorldMatrixDirty();
+		localMatrixDirty = true;
 		Position += pos;
+	}
+
+	void Rotate(glm::vec3 rot)
+	{
+		MakeWorldMatrixDirty();
+		localMatrixDirty = true;
+		Rotation += rot;
 	}
 
 	glm::vec3 GetLocalRotation()
 	{
+		EnsureUpToDate();
 		return Rotation;
 	}
 
 	void SetLocalRotation(glm::vec3 rot)
 	{
-		worldMatrixDirty = true;
+		MakeWorldMatrixDirty();
 		localMatrixDirty = true;
 		Rotation = rot;
 	}
 
 	glm::vec3 GetLocalScale()
 	{
+		EnsureUpToDate();
 		return Scale;
 	}
 
 	void SetLocalScale(glm::vec3 scale)
 	{
+		MakeWorldMatrixDirty();
 		localMatrixDirty = true;
 		Scale = scale;
 	}
@@ -89,6 +114,8 @@ public:
 
 	glm::mat4 WorldMatrix();
 	glm::mat4 LocalMatrix();
+
+
 
 private:
 	bool worldMatrixDirty = true;
@@ -110,8 +137,9 @@ private:
 	void MakeWorldMatrixDirty();
 	Transform* GetRoot();
 
+	void EnsureUpToDate();
+
 	// Inherited via Component
 	virtual void Start() override;
-	virtual void Update() override;
-
+	virtual void OnRender() override;
 };

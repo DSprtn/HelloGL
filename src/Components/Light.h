@@ -6,34 +6,48 @@
 
 class Light : public Component
 {
+public:
+
 	enum LightType
 	{
-		DirectionalLight,
+		PointLight,
 		Spotlight,
-		PointLight
+		DirectionalLight
 	};
 
-public:
+	struct LightData
+	{
+		glm::vec3 color;
+		LightType type; // 0 = point, 1 = spot, 2 = directional
+		glm::vec3 position;
+		float range;
+		glm::vec3 direction;
+		float outerCone;
+		float innerCone;
+		float intensity;
+	};
 
 	Light(Entity* owner, LightType type);
 	~Light();
 
 	LightType Type;
 
-	glm::vec4 Position;
 	glm::vec3 Color;
 	float Intensity;
 	float Range;
 
-	glm::vec3 SpotlightDirection;
+
 	float InnerCone;
 	float OuterCone;
-
 
 
 	// Inherited via Component
 	virtual void Start() override;
 
-	virtual void Update() override;
+	virtual void OnRender() override;
+
+protected:
+
+	void UpdateImGui();
 
 };

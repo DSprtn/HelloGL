@@ -62,6 +62,8 @@ int main(int argc, char* argv[])
 
 	auto camEntity = createEntity("MainCam");
 	auto cam = camEntity->AddComponent<Camera>();
+	camEntity->Transform->SetLocalPosition(glm::vec3(-11.0f, 1.6f, 0.46f));
+	camEntity->Transform->SetLocalRotation(glm::vec3(0.0f, -90.0f, 0.0f));
 
 	auto testLight = createLight("Light", Light::PointLight);
 	testLight->Color = glm::vec3(.3f, .3f, .7f);
@@ -82,17 +84,17 @@ int main(int argc, char* argv[])
 
 	auto lightParent = createEntityWithModel("LightParent", "assets/model/icosphere/icosphere.obj", &uberProgram);
 
-	for (int i = 1; i < 15; i++)
+	for (int i = 5; i < 31; i++)
 	{
 		auto light = createLight("Light " + std::to_string(i), Light::PointLight);
-		light->Range = 2.75f;
+		light->Range = 1.75f;
 		Transform& t = *light->m_Owner->Transform;
 		t.SetParent(lightParent->Transform);
 
 		float x, y, z;
-		x = sinf(i / 1.5f) * (i / 2.0f);
+		x = sinf(i / 1.5f) * (i / 3.0f);
 		y = .25f;
-		z = cosf(i / 1.5f) * (i / 2.0f);
+		z = cosf(i / 1.5f) * (i / 3.0f);
 
 		t.SetLocalPosition(glm::vec3(x,y,z));
 		light->Color = (glm::vec3(x + 1, y, z) + glm::vec3(1.0f)) / 2.0f;
@@ -106,7 +108,7 @@ int main(int argc, char* argv[])
 	{
 		Core::Time::ComputeDeltas();
 
-		lightParent->Transform->Rotate(glm::vec3(5.0f * Core::Time::DeltaTime, 10.0f * Core::Time::DeltaTime, 3.0f * Core::Time::DeltaTime));
+		lightParent->Transform->Rotate(glm::vec3(0.0f, 10.0f * Core::Time::DeltaTime, 0.0f));
 
 
 		engine.Update();

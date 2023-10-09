@@ -6,7 +6,7 @@
 #include <numeric>
 #include <Timer.h>
 
-#define LIGHT_COUNT 16
+#define LIGHT_COUNT 32
 
 Renderer* Renderer::Instance = nullptr;
 
@@ -84,7 +84,7 @@ void Renderer::Render()
 
 	if (MainCamera != nullptr)
 	{
-		const int lightCount = Lights.size();
+		const int lightCount = std::min(static_cast<int>(Lights.size()), LIGHT_COUNT);
 
 		for (int i = 0; i < lightCount; i++)
 		{

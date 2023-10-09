@@ -21,7 +21,6 @@ void Camera::SetProjection(float FOV, float aspect, float near, float far)
 
 void Camera::Start()
 {
-	m_Owner->Transform->SetLocalPosition(glm::vec3(-11.0f, 1.6f, 0.46f));
 }
 
 void Camera::Update()

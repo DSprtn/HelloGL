@@ -6,6 +6,8 @@
 #include <numeric>
 #include <Timer.h>
 
+#include <tracy/TracyOpenGL.hpp>
+
 #define LIGHT_COUNT 32
 
 Renderer* Renderer::Instance = nullptr;
@@ -41,6 +43,8 @@ namespace
 		ImGui::SliderFloat("Timescale", &Core::Time::Timescale, 0.0f, 20.0f);
 		ImGui::End();
 	}
+
+	const std::string GPU_ZONE_NAME = "RenderFrame";
 }
 
 Renderer::Renderer()
@@ -52,15 +56,18 @@ Renderer::Renderer()
 
 void Renderer::Init()
 {
+	TracyGpuContext;
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_FRAMEBUFFER_SRGB);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glfwSwapInterval(VSync);
 }
 
 void Renderer::BeginFrame()
 {
+	TracyGpuZone("BeginFrame");
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	ImGui_ImplOpenGL3_NewFrame();
@@ -70,6 +77,8 @@ void Renderer::BeginFrame()
 
 void Renderer::Render()
 {
+	TracyGpuZone("Frame");
+
 	SimInfoUpdate();
 
 	ImGui::Begin("Renderer Settings");
@@ -79,54 +88,55 @@ void Renderer::Render()
 	}
 	ImGui::End();
 
-
-	lights.fill(Light::LightData());
-
 	if (MainCamera != nullptr)
 	{
-		const int lightCount = std::min(static_cast<int>(Lights.size()), LIGHT_COUNT);
-
-		for (int i = 0; i < lightCount; i++)
 		{
-			Light::LightData l;
-			const Light& light = *Lights[i];
-
-			l.color = light.Color;
-			l.type = light.Type;
-			l.position = MainCamera->ViewMatrix() * glm::vec4(light.m_Owner->Transform->GetWorldPosition(),1.0f);
-			l.direction = glm::normalize(MainCamera->ViewMatrix() * glm::vec4(light.m_Owner->Transform->GetWorldForward(), 0.0f));
-			l.intensity = light.Intensity;
-			l.range = light.Range;
-			l.innerCone = glm::cos(glm::radians(light.InnerCone));
-			l.outerCone = glm::cos(glm::radians(light.OuterCone));
-			lights[i] = l;
-		}
-
-		for (Shader* s : Shaders)
-		{
-			s->use();
-			s->SetMat4(MainCamera->ProjectionMatrix(), "Projection");
-			s->SetMat4(MainCamera->ViewMatrix(), "View");
+			TracyGpuZone("Fill uniforms");
+			lights.fill(Light::LightData());
+			const int lightCount = std::min(static_cast<int>(Lights.size()), LIGHT_COUNT);
 
 			for (int i = 0; i < lightCount; i++)
 			{
-				const std::string currLight = "lights[" + std::to_string(i) + "]";
-				Light::LightData& l = lights[i];
+				Light::LightData l;
+				const Light& light = *Lights[i];
 
-				s->setVec3(l.color, currLight + ".color");
-				s->setVec3(l.position, currLight + ".position");
-				s->setVec3(l.direction, currLight + ".direction");
-				s->setFloat(l.range, currLight + ".range");
-				s->setFloat(l.intensity, currLight + ".intensity");
-				s->setUniform1i(l.type, currLight + ".type");
-				s->setFloat(l.innerCone, currLight + ".innerCone");
-				s->setFloat(l.outerCone, currLight + ".outerCone");
-				s->setUniform1i(lightCount, "LightCount");
+				l.color = light.Color;
+				l.type = light.Type;
+				l.position = MainCamera->ViewMatrix() * glm::vec4(light.m_Owner->Transform->GetWorldPosition(), 1.0f);
+				l.direction = glm::normalize(MainCamera->ViewMatrix() * glm::vec4(light.m_Owner->Transform->GetWorldForward(), 0.0f));
+				l.intensity = light.Intensity;
+				l.range = light.Range;
+				l.innerCone = glm::cos(glm::radians(light.InnerCone));
+				l.outerCone = glm::cos(glm::radians(light.OuterCone));
+				lights[i] = l;
+			}
+
+			for (Shader* s : Shaders)
+			{
+				s->use();
+				s->SetMat4(MainCamera->ProjectionMatrix(), "Projection");
+				s->SetMat4(MainCamera->ViewMatrix(), "View");
+
+				for (int i = 0; i < lightCount; i++)
+				{
+					const std::string currLight = "lights[" + std::to_string(i) + "]";
+					Light::LightData& l = lights[i];
+
+					s->setVec3(l.color, currLight + ".color");
+					s->setVec3(l.position, currLight + ".position");
+					s->setVec3(l.direction, currLight + ".direction");
+					s->setFloat(l.range, currLight + ".range");
+					s->setFloat(l.intensity, currLight + ".intensity");
+					s->setUniform1i(l.type, currLight + ".type");
+					s->setFloat(l.innerCone, currLight + ".innerCone");
+					s->setFloat(l.outerCone, currLight + ".outerCone");
+					s->setUniform1i(lightCount, "LightCount");
+				}
 			}
 		}
-
 		for (MeshRenderer* m : Meshes)
 		{
+			TracyGpuZone("Draw Mesh");
 			m->Draw();
 		}
 	}
@@ -134,9 +144,17 @@ void Renderer::Render()
 
 void Renderer::EndFrame()
 {
-	ImGui::Render();
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-	glfwSwapBuffers(Engine::Instance->Window);
+	{
+		TracyGpuZone("Render ImGui");
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	}
+	{
+		TracyGpuZone("Swap Buffers");
+		glfwSwapBuffers(Engine::Instance->Window);
+	}
+	
+	TracyGpuCollect;
 }
 
 void Renderer::Update()

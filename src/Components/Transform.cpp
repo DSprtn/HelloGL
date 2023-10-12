@@ -3,6 +3,7 @@
 #include <glm/ext/quaternion_float.hpp>
 #include <imgui.h>
 #include <glm/gtc/quaternion.hpp>
+#include <tracy/Tracy.hpp>
 
 Transform::Transform(Entity* owner) : Component(owner)
 {
@@ -44,6 +45,7 @@ void Transform::RecurseImGuiScene()
 
 void Transform::UpdateIMGUI()
 {
+	ZoneScoped;
 	// Only build tree from root nodes
 	if (Parent == nullptr)
 	{

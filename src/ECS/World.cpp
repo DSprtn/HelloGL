@@ -1,4 +1,5 @@
 #include "World.h"
+#include <tracy/Tracy.hpp>
 
 World::~World()
 {
@@ -40,6 +41,7 @@ void World::LateUpdate()
 
 void World::OnRender()
 {
+	ZoneScoped;
 	for (int i = 0; i < Entities.size(); i++) 
 	{
 			Entities[i]->OnRender();

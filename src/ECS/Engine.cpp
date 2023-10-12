@@ -6,6 +6,9 @@
 #include <GLFW/glfw3.h>
 #include <Timer.h>
 #include <numeric>
+#include <tracy/Tracy.hpp>
+
+#define TRACY_ENABLE
 
 namespace
 {
@@ -31,6 +34,7 @@ Engine* Engine::Instance = nullptr;
 
 void Engine::Init()
 {
+	ZoneScoped;
 	int resX = 1366;
 	int resY = 768;
 
@@ -76,6 +80,7 @@ void Engine::Init()
 
 void Engine::Update()
 {
+	ZoneScoped;
 	Input->Update();
 	Renderer->Update();
 
@@ -93,8 +98,8 @@ void Engine::LateUpdate()
 
 void Engine::OnRender()
 {
+	ZoneScoped;
 	Renderer->BeginFrame();
-
 	Renderer->Render();
 
 	if (CurrentWorld != nullptr) {
@@ -104,6 +109,7 @@ void Engine::OnRender()
 	Renderer->EndFrame();
 
 	FrameCount++;
+	FrameMark;
 }
 
 void Engine::Shutdown()

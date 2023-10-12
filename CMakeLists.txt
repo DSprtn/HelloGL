@@ -11,10 +11,12 @@ find_package(ASSIMP CONFIG REQUIRED)
 find_package(GLFW3 CONFIG REQUIRED)
 find_package(GLM CONFIG REQUIRED)
 find_package(GLAD CONFIG REQUIRED)
+find_package(TRACY CONFIG REQUIRED)
 
 target_link_libraries(HelloGL PRIVATE
 					 assimp::assimp 
 					 glfw
+                     Tracy::TracyClient
 					 glm::glm
 					 glad::glad)
 

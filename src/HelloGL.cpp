@@ -110,7 +110,6 @@ int main(int argc, char* argv[])
 
 		lightParent->Transform->Rotate(glm::vec3(0.0f, 10.0f * Core::Time::DeltaTime, 0.0f));
 
-
 		engine.Update();
 		engine.LateUpdate();
 		engine.OnRender();

@@ -1,63 +1,6 @@
 #include "Model.h"
 #include <stb_image.h>
 
-
-namespace
-{
-	unsigned int LoadTexture(char const* path, bool sRGB = false)
-	{
-		unsigned int textureID;
-		glGenTextures(1, &textureID);
-
-		int width, height, nrComponents;
-		unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
-		if (data)
-		{
-			GLenum format = GL_RED;
-
-			if (nrComponents == 1)
-				format = GL_RED;
-			else if (nrComponents == 3)
-				format = GL_RGB;
-			else if (nrComponents == 4)
-				format = GL_RGBA;
-
-			GLenum internalFormat = format;
-
-			if (sRGB)
-			{
-				if (nrComponents == 3)
-				{
-					internalFormat = GL_SRGB;
-				}
-				else if (nrComponents == 4)
-				{
-					internalFormat = GL_SRGB_ALPHA;
-				}
-			}
-
-			glBindTexture(GL_TEXTURE_2D, textureID);
-			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-			glGenerateMipmap(GL_TEXTURE_2D);
-
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-			stbi_image_free(data);
-		}
-		else
-		{
-			std::cout << "Texture failed to load at path: " << path << std::endl;
-			stbi_image_free(data);
-		}
-
-		return textureID;
-	}
-}
-
-
 Model::Model(const std::filesystem::path& path)
 {
 	LoadModel(path);
@@ -89,15 +32,57 @@ void Model::LoadModel(const std::filesystem::path& path)
 		return;
 	}
 	directory = path.parent_path();
+
+
+
+	/*
+	* Limit amount of materials
+	* If not bindless, we'll need a material per texture combination...?
+	*		--- We can maybe keep track of purely the texture changes?
+	* 
+	* Allow using different materials
+	*		--- Non-textured
+	*		--- Emissive only
+	*  
+	* MODEL
+	*		MATERIAL*
+	*		1..*
+	*		MESH*
+	* 
+	* Different textures per material
+	*		Bindless approach would be better...?
+	* 
+	*		
+	* 
+	* 
+	* 
+	* 
+	* 
+	* 
+	* */
+
+
+	for (uint32_t i = 0; i < scene->mNumMaterials; i++)
+	{
+		aiMaterial* m = scene->mMaterials[i];
+		
+		for (uint32_t j = 0; j < m->mNumProperties; j++)
+		{
+			auto prop = m->mProperties[j];
+			
+		}
+	}
+
 	processNode(scene->mRootNode, scene);
 }
 
 void Model::processNode(aiNode* node, const aiScene* scene)
 {
+	
+
 	for (uint32_t i = 0; i < node->mNumMeshes; i++)
 	{
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-		
 		Meshes.emplace_back(processMesh(mesh, scene));
 	}
 
@@ -191,7 +176,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType 
 		}
 		else
 		{
-			Texture texture;
+			Texture texture(texPath.c_str(),sRGB);
 			texture.id = LoadTexture(texPath.c_str(), sRGB);
 			texture.type = typeName;
 			texture.path = texPath;

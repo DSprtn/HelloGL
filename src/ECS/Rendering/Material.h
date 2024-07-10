@@ -1,9 +1,0 @@
-class Material
-{
-public:
-
-private:
-
-
-
-}

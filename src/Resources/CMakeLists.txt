@@ -11,13 +11,11 @@ target_sources(HelloGL
 	${CMAKE_CURRENT_LIST_DIR}/AssetCache.cpp
 	${CMAKE_CURRENT_LIST_DIR}/Model.cpp
 	${CMAKE_CURRENT_LIST_DIR}/Mesh.cpp
-	${CMAKE_CURRENT_LIST_DIR}/Texture.cpp
 
 	PUBLIC
 	${CMAKE_CURRENT_LIST_DIR}/AssetCache.h
-	${CMAKE_CURRENT_LIST_DIR}/Mesh.h
 	${CMAKE_CURRENT_LIST_DIR}/Model.h
-	${CMAKE_CURRENT_LIST_DIR}/Texture.h
+	${CMAKE_CURRENT_LIST_DIR}/Mesh.h
 	)
 	
 # TODO: Add tests and install targets if needed.

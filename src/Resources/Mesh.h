@@ -3,7 +3,6 @@
 #include <vector>
 #include <Shader.h>
 #include <filesystem>
-#include <Texture.h>
 
 
 struct Vertex
@@ -21,6 +20,13 @@ struct Vertex
 	glm::vec3 Normal;
 	glm::vec2 TexCoords;
 	glm::vec3 Tangent;
+};
+
+struct Texture {
+	unsigned int id;
+	std::string type;
+	std::string path;
+	std::string drawName;
 };
 
 class Mesh

@@ -28,6 +28,7 @@ class HelloGLRecipe(ConanFile):
 		self.requires("glfw/3.3.8")
 		self.requires("glm/0.9.9.8")
 		self.requires("glad/0.1.36")
+		self.requires("tracy/0.9.1")
 
 		self.default_options = "assimp/5.2.2:shared=False"
 
@@ -39,6 +40,7 @@ class HelloGLRecipe(ConanFile):
 		deps = CMakeDeps(self)
 		deps.generate()
 		tc = CMakeToolchain(self)
+		tc.user_presets_path = False
 		tc.generate()
 
 	def build(self):

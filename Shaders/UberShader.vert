@@ -1,6 +1,6 @@
 #version 330 core
 
-#include "common.glsl"
+#include "MaterialCommon.glsl"
 
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
@@ -8,7 +8,6 @@ layout (location = 2) in vec2 texCoord;
 layout (location = 3) in vec3 aTangent;
 
 out VS_OUT {
-	vec3 vertexColor;
 	vec2 textureCoord;
 	vec3 fragViewPos;
 	mat3 TBN;

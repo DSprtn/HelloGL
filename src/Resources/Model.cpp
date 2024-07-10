@@ -4,7 +4,6 @@
 
 namespace
 {
-
 	unsigned int LoadTexture(char const* path, bool sRGB = false)
 	{
 		unsigned int textureID;
@@ -79,11 +78,10 @@ void Model::LoadModel(const std::filesystem::path& path)
 	const aiScene* scene = importer.ReadFile(path.string(),
 		aiProcess_CalcTangentSpace |
 		aiProcess_Triangulate |
+		aiProcess_GenNormals |
 		aiProcess_JoinIdenticalVertices |
-		aiProcess_CalcTangentSpace |
 		aiProcess_SortByPType |
-		aiProcess_FlipUVs |
-		aiProcess_GenNormals);
+		aiProcess_FlipUVs);
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
@@ -151,6 +149,10 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 
 		std::vector<Texture> normalMaps = loadMaterialTextures(material,
 			aiTextureType_DISPLACEMENT, "normal");
+		m.Textures.insert(m.Textures.end(), normalMaps.begin(), normalMaps.end());
+
+		normalMaps = loadMaterialTextures(material,
+			aiTextureType_NORMALS, "normal");
 		m.Textures.insert(m.Textures.end(), normalMaps.begin(), normalMaps.end());
 
 		std::vector<Texture> specularMaps = loadMaterialTextures(material,

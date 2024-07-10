@@ -1,0 +1,33 @@
+
+Materials: General, simple material handling
+	- Integrate with batching 
+
+Batching (int64 key, sort on shader->material->mesh?->depth)
+	- Only switch OpenGL state when needed
+
+Frustum culling:
+	- Cull objects 
+	- BVH?
+		-Static/Dynamic Geo
+
+HDR:
+	- Linear framebuffer + Tonemapping
+
+Shadow mapping:
+	- Shadow pass 
+	- Shadow shaders
+	- Shadow memory management
+	- Multiple light shadow mapping
+
+PBR:
+	- Disney model
+	- IBL Diffuse 
+	- IBL Specular
+
+Post Processing:
+	- Bloom
+	- Motion blur?
+
+
+Forward+
+	- Clustered rendering: Detect relevant lights with compute shader

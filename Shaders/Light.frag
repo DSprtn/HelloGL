@@ -1,5 +1,7 @@
 #version 330 core
 
+#include "LightData.glsl"
+
 out vec4 FragColor;
 
 uniform vec3 LightCol;

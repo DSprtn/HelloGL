@@ -15,13 +15,13 @@
       "hidden": true,
       "description": "Sets generator, compilers, x64 architecture, build and install directory, debug build type",
       "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build/${presetName}",
+      "binaryDir": "${sourceDir}/build/",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/",
         "CMAKE_POLICY_DEFAULT_CMP0091": "NEW"
       },
-      "toolchainFile": "${sourceDir}/build/${presetName}/conan_toolchain.cmake"
+      "toolchainFile": "${sourceDir}/build/conan_toolchain.cmake"
     },
     {
       "name": "debug",
@@ -45,14 +45,14 @@
   "buildPresets": [
     {
       "name": "build-debug",
-      "displayName": "Debug",
+      "displayName": "Debug x64",
       "description": "Custom build preset description",
       "configurePreset": "debug",
       "configuration": "Debug"
     },
     {
       "name": "build-release",
-      "displayName": "Release",
+      "displayName": "Release x64",
       "description": "Custom build preset description",
       "configurePreset": "release",
       "configuration": "Release"

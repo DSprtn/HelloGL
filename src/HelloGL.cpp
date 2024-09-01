@@ -35,7 +35,6 @@ int main(int argc, char* argv[])
 	Engine engine;
 	engine.Init();
 
-	Shader defaultProgram = Shader("Shaders/Technicolor.vert", "Shaders/Technicolor.frag");
 	Shader lightProgram = Shader("Shaders/Light.vert", "Shaders/Light.frag");
 	Shader uberProgram = Shader("Shaders/UberShader.vert", "Shaders/UberShader.frag");
 
@@ -97,7 +96,8 @@ int main(int argc, char* argv[])
 		z = cosf(i / 1.5f) * (i / 3.0f);
 
 		t.SetLocalPosition(glm::vec3(x,y,z));
-		light->Color = (glm::vec3(x + 1, y, z) + glm::vec3(1.0f)) / 2.0f;
+
+		light->Color = (glm::vec3(std::fmod(x + 1, 1.0f), std::fmod(y, 1.0f), std::fmod(z,1.0f)) + glm::vec3(1.0f)) / 2.0f;
 	}
 	
 #pragma endregion

@@ -1,5 +1,13 @@
 # (Abandoned, for now) Toy OpenGL engine 
-Following LearnOpenGL.com to create a simple toy engine. Also includes usage of IMGui and the Tracy profiler. 
+Following LearnOpenGL.com to create a simple toy engine. 
+
+Features include:
+* ImGUI control of scene
+* Performance tracing with Tracy
+* Forward rendering with Phong/Blinn light shader supporting point/spot/directional light
+* Normal map support
+* Custom transform/scene hierarchy
+* Lots of jank (this probably should not be public)
 
 ## How to build
 Requires Conan 2 and modern CMake (3.2x+).

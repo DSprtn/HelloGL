@@ -1,4 +1,4 @@
-# Toy OpenGL engine 
+# (Abandoned, for now) Toy OpenGL engine 
 Following LearnOpenGL.com to create a simple toy engine. Also includes usage of IMGui and the Tracy profiler. 
 
 ## How to build

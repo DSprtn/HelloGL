@@ -22,3 +22,6 @@ and for debug:
 ``` conan install . --build=missing -of=build--profile=Debug ```
 
 Running CMake should handle the rest of the setup with automatically configured vars.
+
+
+![image](https://github.com/user-attachments/assets/ced1e59c-4e77-4cf5-9dc5-33b4d61075e4)
